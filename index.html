@@ -655,8 +655,16 @@
         }
 
         function gameLoop() {
+            // 画面サイズがおかしい場合は自動で再計算
+            const container = document.getElementById('map-container');
+            if (canvas.width !== container.clientWidth || canvas.height !== container.clientHeight) {
+                resizeCanvas();
+            }
+            
             if (gameState === 'MAP') updateMap();
-            if (gameState === 'MAP' || gameState === 'DIALOG') drawMap();
+            if (gameState === 'MAP' || gameState === 'DIALOG') {
+                if (canvas.width > 0 && canvas.height > 0) drawMap(); // 0pxバグを回避して描画
+            }
             requestAnimationFrame(gameLoop);
         }
 
@@ -1308,9 +1316,11 @@
             
             try {
                 localStorage.setItem('eduQuestSave_v2', JSON.stringify(saveData));
-                alert("ぼうけんの しょ に きろくした！\n(続きから遊べるようになりました)");
+                closeMenu();
+                startDialog(["ぼうけんの しょ に きろくした！", "(タイトル画面の「つづきから」で再開できます)"]);
             } catch (e) {
-                alert("セーブに失敗しました。ブラウザの設定（シークレットモード等）を確認してください。");
+                closeMenu();
+                startDialog(["セーブにしっぱいした...", "ブラウザの設定を確認してね。"]);
             }
         }
 
@@ -1318,20 +1328,29 @@
             try {
                 const dataStr = localStorage.getItem('eduQuestSave_v2');
                 if (!dataStr) {
-                    alert("セーブデータが ありません。");
+                    if (fromTitle) {
+                        const btn = document.getElementById('continue-btn');
+                        btn.innerText = "データがありません";
+                        setTimeout(() => btn.innerText = "つづきから", 2000);
+                    } else {
+                        closeMenu();
+                        startDialog(["セーブデータが ありません。"]);
+                    }
                     return;
                 }
                 const data = JSON.parse(dataStr);
-                player = data.player;
+                
+                // プレイヤーデータの安全な統合
+                player = { ...player, ...data.player };
                 
                 // マップの状態を復元（開けた宝箱や、倒したボスをポータルに変換）
                 MAP_DATA.forEach((map, mIdx) => {
                     map.chests.forEach(c => {
-                        if (data.openedChests.includes(`${mIdx}_${c.x}_${c.y}`)) {
+                        if (data.openedChests && data.openedChests.includes(`${mIdx}_${c.x}_${c.y}`)) {
                             c.opened = true;
                         }
                     });
-                    if (data.clearedMaps[mIdx]) {
+                    if (data.clearedMaps && data.clearedMaps[mIdx]) {
                         const bIdx = map.npcs.findIndex(n => n.isBoss);
                         if(bIdx > -1) {
                             map.npcs[bIdx] = { 
@@ -1347,28 +1366,41 @@
                     }
                 });
 
+                const targetMapId = data.currentMapId !== undefined ? data.currentMapId : 0;
+
                 if (fromTitle) {
                     document.getElementById('start-screen').classList.add('hidden-true');
                     document.getElementById('map-container').classList.remove('hidden-true');
-                    resizeCanvas();
-                    window.addEventListener('resize', resizeCanvas);
-                    window.addEventListener('keydown', (e) => handleKey(e.key, true));
-                    window.addEventListener('keyup', (e) => handleKey(e.key, false));
-                    // 描画ループを開始する
-                    requestAnimationFrame(gameLoop);
+                    
+                    // ブラウザのレイアウト更新を少しだけ待ってから確実にCanvasを描画する
+                    setTimeout(() => {
+                        resizeCanvas();
+                        window.addEventListener('resize', resizeCanvas);
+                        window.addEventListener('keydown', (e) => handleKey(e.key, true));
+                        window.addEventListener('keyup', (e) => handleKey(e.key, false));
+                        loadMap(targetMapId, player.x, player.y);
+                        gameState = 'MAP';
+                        updatePlayerUI();
+                        requestAnimationFrame(gameLoop);
+                        startDialog(["ぼうけんの しょ から ロードした！"]);
+                    }, 50);
                 } else {
                     closeMenu();
-                }
-
-                loadMap(data.currentMapId, player.x, player.y);
-                gameState = 'MAP';
-                updatePlayerUI();
-                
-                if (!fromTitle) {
-                    alert("ぼうけんの しょ から ロードしました！");
+                    loadMap(targetMapId, player.x, player.y);
+                    gameState = 'MAP';
+                    updatePlayerUI();
+                    startDialog(["ぼうけんの しょ から ロードした！"]);
                 }
             } catch (e) {
-                alert("ロードに失敗しました。データが破損している可能性があります。");
+                console.error(e);
+                if (fromTitle) {
+                    const btn = document.getElementById('continue-btn');
+                    btn.innerText = "ロードしっぱい";
+                    setTimeout(() => btn.innerText = "つづきから", 2000);
+                } else {
+                    closeMenu();
+                    startDialog(["ロードにしっぱいした...", "データがこわれているかもしれない。"]);
+                }
             }
         }
 
