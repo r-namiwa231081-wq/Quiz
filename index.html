@@ -1354,6 +1354,8 @@
                     window.addEventListener('resize', resizeCanvas);
                     window.addEventListener('keydown', (e) => handleKey(e.key, true));
                     window.addEventListener('keyup', (e) => handleKey(e.key, false));
+                    // 描画ループを開始する
+                    requestAnimationFrame(gameLoop);
                 } else {
                     closeMenu();
                 }
