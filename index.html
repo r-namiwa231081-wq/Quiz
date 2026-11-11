@@ -271,9 +271,19 @@
             [T_FOREST]: '#064e3b', [T_CRYSTAL]: '#e0e7ff', [T_DRAGON]: '#713f12', [T_SPACE]: '#020617'
         };
 
-        // Questions Database (Base manual questions + generator)
+        // 100問の追加問題を統合したデータベース
         const QUESTIONS = [
-            // Kanji & Vocabulary
+            // 国語（漢字・ことわざ・四字熟語）
+            { q: "「相好」を崩す。読み方は？", choices: ["そうごう", "そうこう", "あいこう", "あいごう"], ans: 0, type: "国語" },
+            { q: "「一期一会」の意味は？", choices: ["一生に一度の出会い", "毎日会うこと", "一度きりの人生", "最初の出会い"], ans: 0, type: "国語" },
+            { q: "「馬の耳に〇〇」", choices: ["念仏", "水", "風", "真珠"], ans: 0, type: "国語" },
+            { q: "「犬も歩けば〇〇に当たる」", choices: ["棒", "石", "壁", "人"], ans: 0, type: "国語" },
+            { q: "「画竜点睛」の読み方は？", choices: ["がりょうてんせい", "がたつのてんせい", "がりゅうてんせい", "がたつてんせい"], ans: 0, type: "国語" },
+            { q: "「灯台下暗し」の意味は？", choices: ["身近なことは分かりにくい", "遠くはよく見える", "夜は暗い", "海は危険"], ans: 0, type: "国語" },
+            { q: "「五十歩百歩」の意味は？", choices: ["大差がないこと", "少し違うこと", "とても違うこと", "歩くのが遅いこと"], ans: 0, type: "国語" },
+            { q: "「月とすっぽん」の意味は？", choices: ["比較にならないほど違う", "とても似ている", "美味しいもの", "丸いもの"], ans: 0, type: "国語" },
+            { q: "「急がば〇〇」", choices: ["回れ", "走れ", "止まれ", "戻れ"], ans: 0, type: "国語" },
+            { q: "「弘法にも〇の誤り」", choices: ["筆", "墨", "紙", "硯"], ans: 0, type: "国語" },
             { q: "「挨拶」の読み方は？", choices: ["あいさつ", "いさつ", "あしさつ", "えしゃく"], ans: 0, type: "国語" },
             { q: "「躊躇」の意味は？", choices: ["急ぐこと", "ためらうこと", "怒ること", "喜ぶこと"], ans: 1, type: "国語" },
             { q: "「相殺」の読み方は？", choices: ["そうさつ", "あいさつ", "そうさい", "しょうさつ"], ans: 2, type: "国語" },
@@ -282,7 +292,49 @@
             { q: "「脆弱」の読み方は？", choices: ["きけん", "ぜいじゃく", "きじゃく", "ひんじゃく"], ans: 1, type: "国語" },
             { q: "四字熟語: 「前代未○」?", choices: ["聞", "見", "知", "覚"], ans: 0, type: "国語" },
             { q: "「矛盾」の由来となった武器は？", choices: ["剣と盾", "鉾と盾", "弓と矢", "槍と鎧"], ans: 1, type: "国語" },
-            // English
+
+            // 社会（地理・歴史・公民）
+            { q: "日本の都道府県で最も面積が大きいのは？", choices: ["北海道", "岩手県", "福島県", "長野県"], ans: 0, type: "社会" },
+            { q: "日本で最も高い山は？", choices: ["富士山", "北岳", "奥穂高岳", "間ノ岳"], ans: 0, type: "社会" },
+            { q: "聖徳太子が定めたのは「〇〇の憲法」？", choices: ["十七条", "十五条", "十二条", "十条"], ans: 0, type: "社会" },
+            { q: "1600年に起きた天下分け目の戦いは？", choices: ["関ヶ原の戦い", "桶狭間の戦い", "川中島の戦い", "壇ノ浦の戦い"], ans: 0, type: "社会" },
+            { q: "日本国憲法の三大原則の一つは「〇〇主権」？", choices: ["国民主権", "天皇主権", "国家主権", "政府主権"], ans: 0, type: "社会" },
+            { q: "アメリカ合衆国の初代大統領は？", choices: ["ワシントン", "リンカーン", "ケネディ", "オバマ"], ans: 0, type: "社会" },
+            { q: "世界で最も長い川は？", choices: ["ナイル川", "アマゾン川", "長江", "ミシシッピ川"], ans: 0, type: "社会" },
+            { q: "日本の最も南にある島は？", choices: ["沖ノ鳥島", "南鳥島", "与那国島", "択捉島"], ans: 0, type: "社会" },
+            { q: "鎌倉幕府を開いたのは？", choices: ["源頼朝", "平清盛", "足利尊氏", "徳川家康"], ans: 0, type: "社会" },
+            { q: "「三権分立」の三権とは、立法、行政と何？", choices: ["司法", "警察", "軍事", "外交"], ans: 0, type: "社会" },
+            { q: "日本の首都は？", choices: ["大阪", "京都", "東京", "北海道"], ans: 2, type: "社会" },
+            { q: "徳川家康が開いた幕府は？", choices: ["鎌倉", "室町", "江戸", "平安"], ans: 2, type: "社会" },
+            { q: "1192年につくられた幕府は？", choices: ["江戸", "鎌倉", "室町", "平安"], ans: 1, type: "社会" },
+            { q: "日本で一番長い川は？", choices: ["利根川", "信濃川", "石狩川", "天竜川"], ans: 1, type: "社会" },
+
+            // 理科（生物・化学・物理・地学）
+            { q: "昆虫の体は「頭・胸・〇」からなる", choices: ["腹", "足", "羽", "尻"], ans: 0, type: "理科" },
+            { q: "水が氷になると体積はどうなる？", choices: ["増える", "減る", "変わらない", "なくなる"], ans: 0, type: "理科" },
+            { q: "地球の周りを回っている天体は？", choices: ["月", "太陽", "火星", "金星"], ans: 0, type: "理科" },
+            { q: "植物が光を浴びて養分を作る働きは？", choices: ["光合成", "呼吸", "蒸散", "発芽"], ans: 0, type: "理科" },
+            { q: "磁石のN極とS極を近づけるとどうなる？", choices: ["引き合う", "反発する", "変化なし", "熱くなる"], ans: 0, type: "理科" },
+            { q: "食塩水の溶媒は？", choices: ["水", "食塩", "砂糖", "アルコール"], ans: 0, type: "理科" },
+            { q: "メダカのオスとメス、ひれに切れ込みがあるのは？", choices: ["オス", "メス", "両方", "どちらもない"], ans: 0, type: "理科" },
+            { q: "音を伝えるものが無い宇宙空間で音は聞こえる？", choices: ["聞こえない", "聞こえる", "少し聞こえる", "大きく聞こえる"], ans: 0, type: "理科" },
+            { q: "人間の骨の数は大人で約いくつ？", choices: ["約200個", "約100個", "約300個", "約400個"], ans: 0, type: "理科" },
+            { q: "二酸化炭素を石灰水に通すと何色になる？", choices: ["白くにごる", "赤くなる", "青くなる", "透明になる"], ans: 0, type: "理科" },
+            { q: "光合成に必要な気体は？", choices: ["酸素", "水素", "窒素", "二酸化炭素"], ans: 3, type: "理科" },
+            { q: "水は何℃で沸騰する？(1気圧)", choices: ["50℃", "90℃", "100℃", "120℃"], ans: 2, type: "理科" },
+            { q: "一番大きな惑星は？", choices: ["地球", "火星", "木星", "土星"], ans: 2, type: "理科" },
+
+            // 英語
+            { q: "「水」を英語で？", choices: ["Water", "Fire", "Earth", "Air"], ans: 0, type: "英語" },
+            { q: "「Dog」の複数形は？", choices: ["Dogs", "Doges", "Dog", "Dogies"], ans: 0, type: "英語" },
+            { q: "「昨日」を英語で？", choices: ["Yesterday", "Today", "Tomorrow", "Morning"], ans: 0, type: "英語" },
+            { q: "「Happy」の反対の意味の単語は？", choices: ["Sad", "Angry", "Glad", "Fun"], ans: 0, type: "英語" },
+            { q: "「1月」を英語で？", choices: ["January", "February", "March", "April"], ans: 0, type: "英語" },
+            { q: "I ( ) playing tennis now.", choices: ["am", "is", "are", "do"], ans: 0, type: "英語" },
+            { q: "Do you ( ) a pen?", choices: ["have", "has", "having", "had"], ans: 0, type: "英語" },
+            { q: "「走る」を英語で？", choices: ["Run", "Walk", "Jump", "Swim"], ans: 0, type: "英語" },
+            { q: "「Sun」の日本語の意味は？", choices: ["太陽", "月", "星", "雲"], ans: 0, type: "英語" },
+            { q: "「Three」の次の数字は？", choices: ["Four", "Two", "Five", "Six"], ans: 0, type: "英語" },
             { q: "Apple の意味は？", choices: ["みかん", "りんご", "ぶどう", "いちご"], ans: 1, type: "英語" },
             { q: "Beautiful の反対は？", choices: ["Ugly", "Cute", "Nice", "Clean"], ans: 0, type: "英語" },
             { q: "「図書館」を英語で？", choices: ["School", "Hospital", "Library", "Station"], ans: 2, type: "英語" },
@@ -290,18 +342,10 @@
             { q: "過去形: Go -> ?", choices: ["Goes", "Going", "Went", "Gone"], ans: 2, type: "英語" },
             { q: "「環境」を英語で？", choices: ["Nature", "Earth", "Environment", "Ecology"], ans: 2, type: "英語" },
             { q: "「～に依存する」= depend ( )", choices: ["in", "on", "at", "to"], ans: 1, type: "英語" },
-            { q: "He is taller ( ) me.", choices: ["then", "as", "than", "that"], ans: 2, type: "英語" },
-            // History/Science
-            { q: "日本の首都は？", choices: ["大阪", "京都", "東京", "北海道"], ans: 2, type: "社会" },
-            { q: "光合成に必要な気体は？", choices: ["酸素", "水素", "窒素", "二酸化炭素"], ans: 3, type: "理科" },
-            { q: "徳川家康が開いた幕府は？", choices: ["鎌倉", "室町", "江戸", "平安"], ans: 2, type: "社会" },
-            { q: "水は何℃で沸騰する？(1気圧)", choices: ["50℃", "90℃", "100℃", "120℃"], ans: 2, type: "理科" },
-            { q: "1192年につくられた幕府は？", choices: ["江戸", "鎌倉", "室町", "平安"], ans: 1, type: "社会" },
-            { q: "一番大きな惑星は？", choices: ["地球", "火星", "木星", "土星"], ans: 2, type: "理科" },
-            { q: "日本で一番長い川は？", choices: ["利根川", "信濃川", "石狩川", "天竜川"], ans: 1, type: "社会" }
+            { q: "He is taller ( ) me.", choices: ["then", "as", "than", "that"], ans: 2, type: "英語" }
         ];
 
-        // Dynamically add Math questions
+        // 動的計算問題（算数）の追加
         for (let i = 1; i <= 9; i++) {
             for (let j = 1; j <= 9; j++) {
                 let ans = i * j;
@@ -648,11 +692,15 @@
             }
         }
 
+        // エンカウント判定（どこでも歩ける場所なら約8%の確率で出現）
         function checkEncounter() {
             const tile = MAP_DATA[currentMapId].layout[player.y][player.x];
-            if (tile === T_TALL_GRASS && Math.random() < 0.1) {
-                resetInputState();
-                triggerBattle(null);
+            // 壁、水、溶岩以外の「歩けるマス」に適用
+            if (tile !== T_WALL && tile !== T_WATER && tile !== T_LAVA) {
+                if (Math.random() < 0.08) {
+                    resetInputState();
+                    triggerBattle(null);
+                }
             }
         }
 
