@@ -103,7 +103,15 @@
                 <div class="text-5xl cursor-pointer p-2 border-2 border-transparent rounded hover:border-gray-400" onclick="selectSkin('🤖')">🤖</div>
             </div>
             <button class="btn-hover nes-border px-6 py-3 text-2xl w-full mb-4" onclick="startGame()">冒険に出る</button>
-            <button id="continue-btn" class="btn-hover nes-border px-6 py-3 text-2xl w-full text-yellow-400 hidden-true" onclick="loadGame(true)">つづきから</button>
+            <button id="continue-btn" class="btn-hover nes-border px-6 py-3 text-2xl w-full text-yellow-400 mb-4 hidden-true" onclick="loadGame(true)">つづきから</button>
+            
+            <!-- Googleスプレッドシート連携領域 (残してあります) -->
+            <div class="mt-4 border-t border-gray-600 pt-4 w-full">
+                <p class="text-xs text-gray-400 mb-2">▼ スプレッドシート連携 (必要な場合のみ)</p>
+                <input type="text" id="sheet-url" placeholder="ここにシートのURLを貼り付け" class="w-full p-2 mb-2 bg-gray-800 text-white border border-gray-500 rounded text-sm font-sans" autocomplete="off">
+                <button class="btn-hover border border-green-400 px-4 py-2 text-sm w-full bg-green-900 text-white" onclick="loadFromSheet()">☁️ クラウドから読み込む</button>
+                <div id="sheet-msg" class="text-sm mt-2 hidden-true"></div>
+            </div>
         </div>
     </div>
 
@@ -162,7 +170,6 @@
                     <h3 class="text-xl mt-6 mb-2 text-purple-300">なかま (効果)</h3>
                     <div id="m-companions" class="text-md text-gray-300 border-2 border-gray-600 p-2 rounded">なし</div>
                     
-                    <!-- 拡張された道具メニュー -->
                     <h3 class="text-xl mt-6 mb-2 text-blue-300">どうぐ</h3>
                     <div id="m-items" class="text-lg">
                         <div class="flex justify-between items-center mb-2">
@@ -249,7 +256,6 @@
                 <div id="question-choices" class="grid grid-cols-2 gap-2 flex-1"></div>
             </div>
             
-            <!-- 追加: 戦闘中のアイテムメニュー -->
             <div id="item-menu" class="hidden-true w-full h-full flex flex-col justify-between">
                 <div class="text-sm md:text-lg mb-2 text-yellow-200">どれを使う？ <button class="float-right text-gray-400 btn-hover border border-gray-400 px-2 rounded" onclick="setBattleMenu('COMMAND')">もどる</button></div>
                 <div id="battle-item-list" class="grid grid-cols-2 gap-2 flex-1 overflow-y-auto"></div>
@@ -290,7 +296,6 @@
             [T_FOREST]: '#064e3b', [T_CRYSTAL]: '#e0e7ff', [T_DRAGON]: '#713f12', [T_SPACE]: '#020617'
         };
 
-        // アイテムデータベース（新機能）
         const ITEM_DB = {
             potion: { name: "キズぐすり", heal: 30 },
             highPotion: { name: "超キズぐすり", heal: 100 },
@@ -298,75 +303,181 @@
             stun: { name: "しびれ玉", stun: true }
         };
 
-        const QUESTIONS = [
-            // 国語（漢字・ことわざ・四字熟語）
-            { q: "「相好」を崩す。読み方は？", choices: ["そうごう", "そうこう", "あいこう", "あいごう"], ans: 0, type: "国語" },
-            { q: "「一期一会」の意味は？", choices: ["一生に一度の出会い", "毎日会うこと", "一度きりの人生", "最初の出会い"], ans: 0, type: "国語" },
-            { q: "「馬の耳に〇〇」", choices: ["念仏", "水", "風", "真珠"], ans: 0, type: "国語" },
-            { q: "「犬も歩けば〇〇に当たる」", choices: ["棒", "石", "壁", "人"], ans: 0, type: "国語" },
-            { q: "「画竜点睛」の読み方は？", choices: ["がりょうてんせい", "がたつのてんせい", "がりゅうてんせい", "がたつてんせい"], ans: 0, type: "国語" },
-            { q: "「灯台下暗し」の意味は？", choices: ["身近なことは分かりにくい", "遠くはよく見える", "夜は暗い", "海は危険"], ans: 0, type: "国語" },
-            { q: "「五十歩百歩」の意味は？", choices: ["大差がないこと", "少し違うこと", "とても違うこと", "歩くのが遅いこと"], ans: 0, type: "国語" },
-            { q: "「月とすっぽん」の意味は？", choices: ["比較にならないほど違う", "とても似ている", "美味しいもの", "丸いもの"], ans: 0, type: "国語" },
-            { q: "「急がば〇〇」", choices: ["回れ", "走れ", "止まれ", "戻れ"], ans: 0, type: "国語" },
-            { q: "「弘法にも〇の誤り」", choices: ["筆", "墨", "紙", "硯"], ans: 0, type: "国語" },
-            { q: "「挨拶」の読み方は？", choices: ["あいさつ", "いさつ", "あしさつ", "えしゃく"], ans: 0, type: "国語" },
-            { q: "「躊躇」の意味は？", choices: ["急ぐこと", "ためらうこと", "怒ること", "喜ぶこと"], ans: 1, type: "国語" },
-            { q: "「相殺」の読み方は？", choices: ["そうさつ", "あいさつ", "そうさい", "しょうさつ"], ans: 2, type: "国語" },
-            { q: "対義語: 「需要」⇔ ?", choices: ["供給", "消費", "生産", "必要"], ans: 0, type: "国語" },
-            { q: "「五月蠅い」の読みは？", choices: ["さつきばえ", "うるさい", "はえ", "うっとうしい"], ans: 1, type: "国語" },
-            { q: "「脆弱」の読み方は？", choices: ["きけん", "ぜいじゃく", "きじゃく", "ひんじゃく"], ans: 1, type: "国語" },
-            { q: "四字熟語: 「前代未○」?", choices: ["聞", "見", "知", "覚"], ans: 0, type: "国語" },
-            { q: "「矛盾」の由来となった武器は？", choices: ["剣と盾", "鉾と盾", "弓と矢", "槍と鎧"], ans: 1, type: "国語" },
-
-            // 社会
-            { q: "日本の都道府県で最も面積が大きいのは？", choices: ["北海道", "岩手県", "福島県", "長野県"], ans: 0, type: "社会" },
-            { q: "日本で最も高い山は？", choices: ["富士山", "北岳", "奥穂高岳", "間ノ岳"], ans: 0, type: "社会" },
-            { q: "1600年に起きた天下分け目の戦いは？", choices: ["関ヶ原の戦い", "桶狭間の戦い", "川中島の戦い", "壇ノ浦の戦い"], ans: 0, type: "社会" },
-            { q: "アメリカ合衆国の初代大統領は？", choices: ["ワシントン", "リンカーン", "ケネディ", "オバマ"], ans: 0, type: "社会" },
-            { q: "鎌倉幕府を開いたのは？", choices: ["源頼朝", "平清盛", "足利尊氏", "徳川家康"], ans: 0, type: "社会" },
-            { q: "日本の首都は？", choices: ["大阪", "京都", "東京", "北海道"], ans: 2, type: "社会" },
-            { q: "徳川家康が開いた幕府は？", choices: ["鎌倉", "室町", "江戸", "平安"], ans: 2, type: "社会" },
-            { q: "日本で一番長い川は？", choices: ["利根川", "信濃川", "石狩川", "天竜川"], ans: 1, type: "社会" },
-
-            // 理科
-            { q: "昆虫の体は「頭・胸・〇」からなる", choices: ["腹", "足", "羽", "尻"], ans: 0, type: "理科" },
-            { q: "水が氷になると体積はどうなる？", choices: ["増える", "減る", "変わらない", "なくなる"], ans: 0, type: "理科" },
-            { q: "植物が光を浴びて養分を作る働きは？", choices: ["光合成", "呼吸", "蒸散", "発芽"], ans: 0, type: "理科" },
-            { q: "磁石のN極とS極を近づけるとどうなる？", choices: ["引き合う", "反発する", "変化なし", "熱くなる"], ans: 0, type: "理科" },
-            { q: "人間の骨の数は大人で約いくつ？", choices: ["約200個", "約100個", "約300個", "約400個"], ans: 0, type: "理科" },
-            { q: "光合成に必要な気体は？", choices: ["酸素", "水素", "窒素", "二酸化炭素"], ans: 3, type: "理科" },
-            { q: "水は何℃で沸騰する？(1気圧)", choices: ["50℃", "90℃", "100℃", "120℃"], ans: 2, type: "理科" },
-            { q: "一番大きな惑星は？", choices: ["地球", "火星", "木星", "土星"], ans: 2, type: "理科" },
-
-            // 英語
-            { q: "「水」を英語で？", choices: ["Water", "Fire", "Earth", "Air"], ans: 0, type: "英語" },
-            { q: "「Dog」の複数形は？", choices: ["Dogs", "Doges", "Dog", "Dogies"], ans: 0, type: "英語" },
-            { q: "「昨日」を英語で？", choices: ["Yesterday", "Today", "Tomorrow", "Morning"], ans: 0, type: "英語" },
-            { q: "「Happy」の反対の意味の単語は？", choices: ["Sad", "Angry", "Glad", "Fun"], ans: 0, type: "英語" },
-            { q: "I ( ) playing tennis now.", choices: ["am", "is", "are", "do"], ans: 0, type: "英語" },
-            { q: "Do you ( ) a pen?", choices: ["have", "has", "having", "had"], ans: 0, type: "英語" },
-            { q: "「走る」を英語で？", choices: ["Run", "Walk", "Jump", "Swim"], ans: 0, type: "英語" },
-            { q: "「Sun」の日本語の意味は？", choices: ["太陽", "月", "星", "雲"], ans: 0, type: "英語" },
-            { q: "Apple の意味は？", choices: ["みかん", "りんご", "ぶどう", "いちご"], ans: 1, type: "英語" }
+        // ★小学5年生向け 100問 を直接コードに埋め込み！★
+        let QUESTIONS = [
+            {q:"「準備」の正しい読み方は？", choices:["じゅんび","じゅんぴ","しゅんび","しゅんぴ"], ans:0, type:"国語"},
+            {q:"「条件」の正しい読み方は？", choices:["じょうけん","じょけん","しょうけん","ちゅうけん"], ans:0, type:"国語"},
+            {q:"「桜」の音読みはどれ？", choices:["オウ","サクラ","ソウ","ロウ"], ans:0, type:"国語"},
+            {q:"「謝る」の正しい読み方は？", choices:["あやまる","あやぶむ","ことわる","いのる"], ans:0, type:"国語"},
+            {q:"「導く」の正しい読み方は？", choices:["みちびく","さばく","はこぶ","うごく"], ans:0, type:"国語"},
+            {q:"「潔い」の正しい読み方は？", choices:["いさぎよい","あやうい","きわどい","はげしい"], ans:0, type:"国語"},
+            {q:"「あつい」本を読む。正しい漢字は？", choices:["厚い","暑い","熱い","圧い"], ans:0, type:"国語"},
+            {q:"「たいしょう」的な二人。正しい漢字は？", choices:["対照","対象","大将","対称"], ans:0, type:"国語"},
+            {q:"「きそく」を守る。正しい漢字は？", choices:["規則","気息","基測","記則"], ans:0, type:"国語"},
+            {q:"「さんせい」する。正しい漢字は？", choices:["賛成","酸性","産生","三成"], ans:0, type:"国語"},
+            {q:"ことわざ「犬も歩けば（ ）にあたる」", choices:["棒","壁","人","石"], ans:0, type:"国語"},
+            {q:"ことわざ「猿も（ ）から落ちる」", choices:["木","崖","空","屋根"], ans:0, type:"国語"},
+            {q:"ことわざ「（ ）の耳に念仏」", choices:["馬","猫","犬","豚"], ans:0, type:"国語"},
+            {q:"ことわざ「（ ）に真珠」", choices:["豚","猫","犬","馬"], ans:0, type:"国語"},
+            {q:"四字熟語「（ ）十人色」", choices:["十人","百人","千人","万人"], ans:0, type:"国語"},
+            {q:"「五十歩（ ）歩」", choices:["百","十","千","万"], ans:0, type:"国語"},
+            {q:"文章の小さなまとまりを何という？", choices:["段落","行","文","句"], ans:0, type:"国語"},
+            {q:"敬語のうち、相手を高めて敬意を表すのは？", choices:["尊敬語","謙譲語","丁寧語","美化語"], ans:0, type:"国語"},
+            {q:"「言う」の尊敬語は？", choices:["おっしゃる","申す","言われる","言う"], ans:0, type:"国語"},
+            {q:"「行く」の謙譲語は？", choices:["参る","いらっしゃる","行かれる","行く"], ans:0, type:"国語"},
+            {q:"たて3cm、横4cm、高さ5cmの直方体の体積は？", choices:["60立方cm","12立方cm","20立方cm","120立方cm"], ans:0, type:"算数"},
+            {q:"1辺が2cmの立方体の体積は？", choices:["8立方cm","6立方cm","4立方cm","12立方cm"], ans:0, type:"算数"},
+            {q:"1000立方センチメートルは何リットル？", choices:["1リットル","10リットル","100リットル","0.1リットル"], ans:0, type:"算数"},
+            {q:"分母が違う分数のたし算で、分母を同じにすることを何という？", choices:["通分","約分","倍分","等分"], ans:0, type:"算数"},
+            {q:"1/2 ＋ 1/3 の答えは？", choices:["5/6","2/5","1/5","1/6"], ans:0, type:"算数"},
+            {q:"1/2 － 1/3 の答えは？", choices:["1/6","1/5","0","5/6"], ans:0, type:"算数"},
+            {q:"0.3 × 0.4 の答えは？", choices:["0.12","1.2","0.012","12"], ans:0, type:"算数"},
+            {q:"1.2 ÷ 0.4 の答えは？", choices:["3","0.3","30","0.03"], ans:0, type:"算数"},
+            {q:"2と3の最小公倍数は？", choices:["6","5","1","12"], ans:0, type:"算数"},
+            {q:"12と18の最大公約数は？", choices:["6","3","2","1"], ans:0, type:"算数"},
+            {q:"三角形の内角の和は何度？", choices:["180度","360度","90度","270度"], ans:0, type:"算数"},
+            {q:"四角形の内角の和は何度？", choices:["360度","180度","540度","720度"], ans:0, type:"算数"},
+            {q:"円周の長さの求め方は「（ ）× 円周率」", choices:["直径","半径","面積","中心角"], ans:0, type:"算数"},
+            {q:"円の面積の求め方は「（ ）× 半径 × 円周率」", choices:["半径","直径","円周","中心角"], ans:0, type:"算数"},
+            {q:"時速40kmで走る車が2時間で進む道のりは？", choices:["80km","20km","60km","100km"], ans:0, type:"算数"},
+            {q:"道のりを求める公式は「（ ）× 時間」", choices:["速さ","面積","体積","重さ"], ans:0, type:"算数"},
+            {q:"200円の20%は何円？", choices:["40円","20円","10円","80円"], ans:0, type:"算数"},
+            {q:"定価500円の品物を2割引きで買うといくら？", choices:["400円","300円","480円","450円"], ans:0, type:"算数"},
+            {q:"「平均」を求める式は「（ ）÷ 個数」", choices:["合計","最大値","最小値","差"], ans:0, type:"算数"},
+            {q:"底辺が4cm、高さが5cmの三角形の面積は？", choices:["10平方cm","20平方cm","9平方cm","40平方cm"], ans:0, type:"算数"},
+            {q:"インゲンマメの発芽に必要なのは、水、空気とあと一つは？", choices:["適当な温度","日光","肥料","土"], ans:0, type:"理科"},
+            {q:"植物が日光を受けてでんぷんを作る働きを何という？", choices:["光合成","呼吸","蒸散","発芽"], ans:0, type:"理科"},
+            {q:"メダカのたまごがふ化するのにかかる日数は約何日？", choices:["約10日","約3日","約30日","約半年"], ans:0, type:"理科"},
+            {q:"メダカのおすのしりびれはどんな形？", choices:["平行四辺形に近い","小さくて丸い","三角形に近い","二つに分かれている"], ans:0, type:"理科"},
+            {q:"台風はふつう、日本付近でどの方角へ進む？", choices:["北や北東","南や南西","西","東や南東"], ans:0, type:"理科"},
+            {q:"ふりこが一往復する時間は何で決まる？", choices:["ふりこの長さ","おもりの重さ","ふれはば","糸の太さ"], ans:0, type:"理科"},
+            {q:"食塩を水にとかしたとき、とけた食塩はどうなる？", choices:["見えなくなる","底に沈む","水面に浮く","白くにごる"], ans:0, type:"理科"},
+            {q:"水にとかした食塩を取り出すにはどうすればよい？", choices:["水を蒸発させる","冷やす","ふるいにかける","虫めがねで見る"], ans:0, type:"理科"},
+            {q:"温度を上げると、水にとける量が大きく増えるのは？", choices:["ミョウバン","食塩","二酸化炭素","砂"], ans:0, type:"理科"},
+            {q:"流れる水が川岸をけずる働きを何という？", choices:["浸食（しんしょく）","運搬（うんぱん）","堆積（たいせき）","風化（ふうか）"], ans:0, type:"理科"},
+            {q:"流れる水が土などを運ぶ働きを何という？", choices:["運搬（うんぱん）","浸食（しんしょく）","堆積（たいせき）","風化（ふうか）"], ans:0, type:"理科"},
+            {q:"流れる水が土などを積もらせる働きを何という？", choices:["堆積（たいせき）","浸食（しんしょく）","運搬（うんぱん）","風化（ふうか）"], ans:0, type:"理科"},
+            {q:"人の赤ちゃんは、母親のおなかの中で約何か月育つ？", choices:["約9か月","約3か月","約12か月","約5か月"], ans:0, type:"理科"},
+            {q:"赤ちゃんがへその緒を通して母親からもらうものは、栄養分と何？", choices:["酸素","二酸化炭素","血液","光"], ans:0, type:"理科"},
+            {q:"コイルに鉄しんを入れて電流を流したものを何という？", choices:["電磁石","永久磁石","棒磁石","U字形磁石"], ans:0, type:"理科"},
+            {q:"電磁石の極（N極・S極）を変えるにはどうする？", choices:["電流の向きを逆にする","電池を増やす","コイルの巻数を増やす","鉄しんを抜く"], ans:0, type:"理科"},
+            {q:"電磁石の力を強くするにはどうする？", choices:["電池の数を増やす","電流の向きを逆にする","コイルの巻数を減らす","鉄しんを抜く"], ans:0, type:"理科"},
+            {q:"雲の量で天気を決めるとき、雲の量が「9」のときの天気は？", choices:["くもり","晴れ","雨","快晴"], ans:0, type:"理科"},
+            {q:"天気が西から東へ変わるのは何という風の影響？", choices:["偏西風","季節風","貿易風","海風"], ans:0, type:"理科"},
+            {q:"モーターを回す力が一番強いのはどれ？", choices:["直列つなぎ（電池2個）","並列つなぎ（電池2個）","電池1個","電池なし"], ans:0, type:"理科"},
+            {q:"日本の国土で一番広い面積をしめているのは何？", choices:["森林","農地","住宅地","道路"], ans:0, type:"社会"},
+            {q:"日本の最北端にある島は？", choices:["択捉（えとろふ）島","沖ノ鳥島","与那国島","南鳥島"], ans:0, type:"社会"},
+            {q:"日本の最南端にある島は？", choices:["沖ノ鳥島","択捉島","与那国島","南鳥島"], ans:0, type:"社会"},
+            {q:"日本のまわりにある4つの海のうち、東側にあるのは？", choices:["太平洋","日本海","オホーツク海","東シナ海"], ans:0, type:"社会"},
+            {q:"日本の川の特徴として正しいのは？", choices:["短くて流れが急","長くて流れがゆるやか","水量が一年中同じ","海につながっていない"], ans:0, type:"社会"},
+            {q:"米作りで、春に苗を田んぼに植える作業を何という？", choices:["田植え","稲刈り","脱穀（だっこく）","もみすり"], ans:0, type:"社会"},
+            {q:"米の生産量が日本一多い都道府県は？（2022年など近年）", choices:["新潟県","沖縄県","東京都","大阪府"], ans:0, type:"社会"},
+            {q:"日本の食料自給率は現在約何パーセント？", choices:["約38％","約80％","約10％","約100％"], ans:0, type:"社会"},
+            {q:"海流のうち、南から北へ流れるあたたかい海流を何という？", choices:["黒潮（日本海流）","親潮（千島海流）","リマン海流","対馬海流"], ans:0, type:"社会"},
+            {q:"あたたかい海流とつめたい海流がぶつかり、魚が多くとれる場所は？", choices:["潮目（しおめ）","干潟（ひがた）","さんご礁","深海"], ans:0, type:"社会"},
+            {q:"育てる漁業のうち、卵からかえした稚魚を自然の海に放すのは？", choices:["栽培（さいばい）漁業","養殖（ようしょく）漁業","遠洋漁業","沖合漁業"], ans:0, type:"社会"},
+            {q:"自動車の生産がさかんで、「豊田（とよた）市」がある都道府県は？", choices:["愛知県","北海道","沖縄県","青森県"], ans:0, type:"社会"},
+            {q:"愛知県を中心とする、日本で一番生産額が多い工業地帯は？", choices:["中京工業地帯","京浜工業地帯","阪神工業地帯","北九州工業地帯"], ans:0, type:"社会"},
+            {q:"身の回りの工業製品のうち、鉄鉱石から作られるものは？", choices:["自動車のボディ","ペットボトル","ガラス","プラスチック"], ans:0, type:"社会"},
+            {q:"情報を伝えるメディアとして、最も早く広く伝わるのは？", choices:["テレビ・インターネット","新聞","本","手紙"], ans:0, type:"社会"},
+            {q:"自然災害から身を守るために、避難場所などを記した地図は？", choices:["ハザードマップ","ロードマップ","日本地図","世界地図"], ans:0, type:"社会"},
+            {q:"ごみを減らすための「3R」の「リデュース」の意味は？", choices:["ごみになるものを減らす","くり返し使う","資源として再び利用する","燃やす"], ans:0, type:"社会"},
+            {q:"森林が持つ働きとして間違っているのは？", choices:["海水をきれいにする","水をたくわえる","土砂くずれを防ぐ","空気をきれいにする"], ans:0, type:"社会"},
+            {q:"日本で一番長い川は？", choices:["信濃川","利根川","石狩川","四万十川"], ans:0, type:"社会"},
+            {q:"日本で一番流域面積が広い川は？", choices:["利根川","信濃川","石狩川","吉野川"], ans:0, type:"社会"},
+            {q:"「Hello」の日本語の意味は？", choices:["こんにちは","さようなら","ありがとう","ごめんなさい"], ans:0, type:"英語"},
+            {q:"「Thank you」の日本語の意味は？", choices:["ありがとう","こんにちは","さようなら","はい"], ans:0, type:"英語"},
+            {q:"「Good morning」の意味は？", choices:["おはよう","こんにちは","こんばんは","おやすみ"], ans:0, type:"英語"},
+            {q:"「Apple」の日本語の意味は？", choices:["りんご","みかん","ぶどう","いちご"], ans:0, type:"英語"},
+            {q:"「Dog」の日本語の意味は？", choices:["犬","猫","鳥","魚"], ans:0, type:"英語"},
+            {q:"「Cat」の日本語の意味は？", choices:["猫","犬","馬","牛"], ans:0, type:"英語"},
+            {q:"「1」を英語で何という？", choices:["One","Two","Three","Four"], ans:0, type:"英語"},
+            {q:"「3」を英語で何という？", choices:["Three","Two","Four","Five"], ans:0, type:"英語"},
+            {q:"「赤」を英語で何という？", choices:["Red","Blue","Yellow","Green"], ans:0, type:"英語"},
+            {q:"「青」を英語で何という？", choices:["Blue","Red","Yellow","Black"], ans:0, type:"英語"},
+            {q:"「I like apples.」の意味は？", choices:["私はりんごが好きです。","私はりんごを食べます。","私はりんごを持っています。","これはりんごです。"], ans:0, type:"英語"},
+            {q:"「Do you like cats?」の意味は？", choices:["あなたは猫が好きですか。","私は猫が好きです。","あなたは猫を飼っていますか。","そこに猫はいますか。"], ans:0, type:"英語"},
+            {q:"「Yes, I do.」の意味は？", choices:["はい、そうです。","いいえ、ちがいます。","こんにちは。","ありがとう。"], ans:0, type:"英語"},
+            {q:"「Sunday」の意味は？", choices:["日曜日","月曜日","土曜日","金曜日"], ans:0, type:"英語"},
+            {q:"「Teacher」の意味は？", choices:["先生","生徒","学校","教室"], ans:0, type:"英語"},
+            {q:"「School」の意味は？", choices:["学校","公園","病院","駅"], ans:0, type:"英語"},
+            {q:"「Book」の意味は？", choices:["本","えんぴつ","ノート","かばん"], ans:0, type:"英語"},
+            {q:"「I can swim.」の意味は？", choices:["私は泳ぐことができます。","私は泳ぎません。","私は泳ぎたいです。","私は泳ぐのが好きです。"], ans:0, type:"英語"},
+            {q:"「What is this?」の意味は？", choices:["これは何ですか。","あれは何ですか。","あなたは何ですか。","それは何ですか。"], ans:0, type:"英語"},
+            {q:"「My name is Ken.」の意味は？", choices:["私の名前はケンです。","あなたはケンですか。","私はケンが好きです。","ケンは友達です。"], ans:0, type:"英語"}
         ];
 
-        // 動的計算問題（算数）
-        for (let i = 1; i <= 9; i++) {
-            for (let j = 1; j <= 9; j++) {
-                let ans = i * j;
-                let choices = [ans, ans + 1, ans - 1, ans + 2];
-                if (ans - 1 <= 0) choices[2] = ans + 3;
-                choices = choices.sort(() => Math.random() - 0.5);
-                QUESTIONS.push({ q: `${i} × ${j} = ?`, choices: choices.map(String), ans: choices.indexOf(ans), type: "算数" });
+        // ==========================================
+        // ★ スプレッドシート読み込み機能 (残してあります) ★
+        // ==========================================
+        async function loadFromSheet() {
+            const urlInput = document.getElementById('sheet-url').value;
+            const msg = document.getElementById('sheet-msg');
+            msg.classList.remove('hidden-true');
+            
+            if (!urlInput.trim()) {
+                msg.innerText = "URLが入力されていません。";
+                msg.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+
+            const match = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
+            if (!match) {
+                msg.innerText = "正しいスプレッドシートのURLを貼り付けてください。";
+                msg.className = "text-red-400 text-sm mt-2";
+                return;
+            }
+            
+            const sheetId = match[1];
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+            
+            try {
+                msg.innerText = "クラウドから問題をダウンロード中...";
+                msg.className = "text-yellow-400 text-sm mt-2";
+                
+                const response = await fetch(csvUrl);
+                if (!response.ok) {
+                    throw new Error('アクセス拒否または見つかりません。');
+                }
+                const text = await response.text();
+                
+                const lines = text.split(/\r\n|\n/);
+                let added = 0;
+                let newQuestions = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+                    if (cols.length >= 6) {
+                        newQuestions.push({
+                            type: cols[0],
+                            q: cols[1],
+                            choices: [cols[2], cols[3], cols[4], cols[5]],
+                            ans: 0 
+                        });
+                        added++;
+                    }
+                }
+
+                if (added > 0) {
+                    QUESTIONS = QUESTIONS.concat(newQuestions);
+                    msg.innerText = `${added}問のオリジナル問題を追加しました！`;
+                    msg.className = "text-green-400 text-sm mt-2 font-bold";
+                    document.getElementById('sheet-url').value = "";
+                } else {
+                    msg.innerText = "読み込める問題がありませんでした。形式を確認してください。";
+                    msg.className = "text-red-400 text-sm mt-2";
+                }
+            } catch(e) {
+                console.error(e);
+                msg.innerText = "エラー: スプレッドシートが「リンクを知っている全員が閲覧可」になっているか確認してください。";
+                msg.className = "text-red-400 text-sm mt-2";
             }
         }
 
         const ENEMY_TIERS = [
-            [{ name: "スライム", emoji: "💧", hp: 15, atk: 4, exp: 5, gold: 3, drop: {name: 'きのえだ(攻+3)', type: 'weapon', stat: 3, prob: 0.15} },
-             { name: "コウモリ", emoji: "🦇", hp: 25, atk: 7, exp: 8, gold: 5, drop: {name: 'かわのぼうし(防+3)', type: 'armor', stat: 3, prob: 0.15} }],
-            [{ name: "サボテン", emoji: "🌵", hp: 50, atk: 12, exp: 15, gold: 12, drop: {name: 'トゲのムチ(攻+8)', type: 'weapon', stat: 8, prob: 0.15} },
-             { name: "ミイラ", emoji: "🧟", hp: 65, atk: 18, exp: 22, gold: 18, drop: {name: 'ほうたい(防+5)', type: 'armor', stat: 5, prob: 0.15} }],
+            [{ name: "スライム", emoji: "💧", hp: 15, atk: 4, exp: 5, gold: 3, drop: {name: 'きのえだ(攻+3)', type: 'weapon', stat: 3, prob: 0.15} }],
+            [{ name: "サボテン", emoji: "🌵", hp: 50, atk: 12, exp: 15, gold: 12, drop: {name: 'トゲのムチ(攻+8)', type: 'weapon', stat: 8, prob: 0.15} }],
             [{ name: "デーモン", emoji: "👿", hp: 100, atk: 28, exp: 35, gold: 30, drop: {name: 'あくまのヤリ(攻+18)', type: 'weapon', stat: 18, prob: 0.2} }],
             [{ name: "雪女", emoji: "⛄", hp: 150, atk: 35, exp: 55, gold: 45, drop: {name: '氷の杖(攻+25)', type: 'weapon', stat: 25, prob: 0.15} }],
             [{ name: "フレイム", emoji: "🔥", hp: 220, atk: 45, exp: 80, gold: 70, drop: {name: '炎の鎧(防+20)', type: 'armor', stat: 20, prob: 0.15} }],
@@ -377,7 +488,6 @@
             [{ name: "虚無の影", emoji: "👽", hp: 1200, atk: 130, exp: 800, gold: 600, drop: {name: '星屑の剣(攻+99)', type: 'weapon', stat: 99, prob: 0.05} }]
         ];
 
-        // 各マップのショップ品揃えも拡張
         const MAP_DATA = [
             { // 0: Grassland
                 bg: '#000',
@@ -395,7 +505,6 @@
                 npcs: [
                     { x: 3, y: 3, sprite: '👴', dialog: ["草原の村へようこそ！", "全10ステージの冒険が待っているぞ。"] },
                     { x: 12, y: 2, sprite: '🏨', isInn: true, cost: 10 },
-                    // ショップにアイテムを追加
                     { x: 13, y: 3, sprite: '💰', isShop: true, items: [
                         {name: 'どうのつるぎ(攻+5)', type: 'weapon', stat: 5, price: 50}, 
                         {name: 'キズぐすり', type: 'item', itemId: 'potion', price: 20},
@@ -564,7 +673,7 @@
             x: 7, y: 7, pixelX: 7*TILE_SIZE, pixelY: 7*TILE_SIZE,
             isMoving: false, direction: 'up',
             level: 1, hp: 30, maxHp: 30, exp: 0, gold: 50, 
-            items: { potion: 3, highPotion: 0, bomb: 0, stun: 0 }, // アイテム拡張
+            items: { potion: 3, highPotion: 0, bomb: 0, stun: 0 }, 
             baseAtk: 5, baseDef: 2, combo: 0,
             weapon: { name: "ひのきのぼう", stat: 2 }, 
             armor: { name: "ぬののふく", stat: 1 },
@@ -700,7 +809,6 @@
             }
         }
 
-        // バグ修正: 操作のリセット
         function resetInputState() {
             keys = { up: false, down: false, left: false, right: false };
             player.isMoving = false;
@@ -872,7 +980,6 @@
             document.getElementById('m-weap').innerText = player.weapon.name;
             document.getElementById('m-arm').innerText = player.armor.name;
 
-            // Items Count Update
             document.getElementById('m-potion-count').innerText = player.items.potion || 0;
             document.getElementById('m-hpotion-count').innerText = player.items.highPotion || 0;
             document.getElementById('m-bomb-count').innerText = player.items.bomb || 0;
@@ -1109,7 +1216,22 @@
 
         function showQuestion() {
             setBattleMenu('QUESTION');
-            currentQuestion = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+            
+            const rawQ = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+            currentQuestion = JSON.parse(JSON.stringify(rawQ));
+            
+            let indices = [0, 1, 2, 3];
+            indices.sort(() => Math.random() - 0.5);
+            
+            let shuffledChoices = [];
+            for(let i=0; i<4; i++) {
+                shuffledChoices.push(rawQ.choices[indices[i]]);
+                if(indices[i] === rawQ.ans) {
+                    currentQuestion.ans = i;
+                }
+            }
+            currentQuestion.choices = shuffledChoices;
+
             document.getElementById('question-text').innerText = `[${currentQuestion.type}] ${currentQuestion.q}`;
             
             const div = document.getElementById('question-choices');
@@ -1237,7 +1359,7 @@
             
             if (currentEnemy.stunned) {
                 await logMsg(`${currentEnemy.name} は しびれて 動けない！`, "text-yellow-300");
-                currentEnemy.stunned = false; // 1回で効果が切れる
+                currentEnemy.stunned = false;
                 await wait(800);
                 isPlayerTurn = true;
                 setBattleMenu('COMMAND');
@@ -1432,7 +1554,7 @@
             };
             
             try {
-                localStorage.setItem('eduQuestSave_v2', JSON.stringify(saveData));
+                localStorage.setItem('eduQuestSave_v3', JSON.stringify(saveData));
                 closeMenu();
                 startDialog(["ぼうけんの しょ に きろくした！"]);
             } catch (e) {
@@ -1443,7 +1565,7 @@
 
         function loadGame(fromTitle = false) {
             try {
-                const dataStr = localStorage.getItem('eduQuestSave_v2');
+                let dataStr = localStorage.getItem('eduQuestSave_v3') || localStorage.getItem('eduQuestSave_v2');
                 if (!dataStr) {
                     if (fromTitle) {
                         const btn = document.getElementById('continue-btn');
@@ -1459,7 +1581,6 @@
                 
                 player = { ...player, ...data.player };
                 
-                // 古いセーブデータとの互換性（アイテム管理の統合）
                 if (data.player.potions !== undefined && !data.player.items) {
                     player.items = { potion: data.player.potions, highPotion: 0, bomb: 0, stun: 0 };
                 } else if (!player.items) {
@@ -1521,7 +1642,7 @@
             }
         }
 
-        if (localStorage.getItem('eduQuestSave_v2')) {
+        if (localStorage.getItem('eduQuestSave_v3') || localStorage.getItem('eduQuestSave_v2')) {
             const continueBtn = document.getElementById('continue-btn');
             if (continueBtn) continueBtn.classList.remove('hidden-true');
         }
