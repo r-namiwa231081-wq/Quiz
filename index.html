@@ -514,6 +514,8 @@
             [{ name: "虚無の影", emoji: "👽", hp: 1200, atk: 130, exp: 800, gold: 600, drop: {name: '星屑の剣(攻+99)', type: 'weapon', stat: 99, prob: 0.05} }]
         ];
 
+        const RARE_MONSTER = { name: "ゴールデンスライム", emoji: "🪙", hp: 80, atk: 25, exp: 5000, gold: 5000, drop: {name: '黄金の剣(攻+77)', type: 'weapon', stat: 77, prob: 0.3} };
+
         const MONSTER_BONUSES = {
             "スライム": { desc: "戦闘後HP回復(+2)", type: 'heal', val: 2 },
             "サボテン": { desc: "攻撃力+2", type: 'atk', val: 2 },
@@ -524,7 +526,8 @@
             "マンドラゴラ": { desc: "戦闘後HP回復(+10)", type: 'heal', val: 10 },
             "ゴーレム": { desc: "防御力+15", type: 'def', val: 15 },
             "ワイバーン": { desc: "攻撃力+20", type: 'atk', val: 20 },
-            "虚無の影": { desc: "攻・防+10", type: 'all', val: 10 }
+            "虚無の影": { desc: "攻・防+10", type: 'all', val: 10 },
+            "ゴールデンスライム": { desc: "攻・防+15", type: 'all', val: 15 }
         };
 
         function getMonsterAtkBonus() {
@@ -1236,6 +1239,7 @@
 
             let allMonsters = [];
             ENEMY_TIERS.forEach(tier => tier.forEach(e => allMonsters.push(e)));
+            allMonsters.push(RARE_MONSTER);
             MAP_DATA.forEach(m => m.npcs.forEach(n => { if(n.isBoss) allMonsters.push({name: n.name, emoji: n.sprite, hp: n.hp, atk: n.atk, isBoss: true}); }));
 
             const uniqueMonsters = [];
@@ -1397,8 +1401,12 @@
                 currentEnemy.stunned = false;
                 document.getElementById('boss-bg').classList.remove('hidden-true');
             } else {
-                const list = ENEMY_TIERS[currentMapId];
-                currentEnemy = JSON.parse(JSON.stringify(list[Math.floor(Math.random() * list.length)]));
+                if (Math.random() < 0.02) {
+                    currentEnemy = JSON.parse(JSON.stringify(RARE_MONSTER));
+                } else {
+                    const list = ENEMY_TIERS[currentMapId];
+                    currentEnemy = JSON.parse(JSON.stringify(list[Math.floor(Math.random() * list.length)]));
+                }
                 currentEnemy.maxHp = currentEnemy.hp;
                 currentEnemy.stunned = false;
                 document.getElementById('boss-bg').classList.add('hidden-true');
