@@ -163,8 +163,14 @@
                         <div>防御: <span id="m-def">2</span></div>
                         <div>EXP: <span id="m-exp">0</span></div>
                         <div>お金: <span id="m-gold" class="text-yellow-400">0</span> G</div>
-                        <div class="col-span-2 text-sm text-gray-400 mt-2">武器: <span id="m-weap">なし</span></div>
-                        <div class="col-span-2 text-sm text-gray-400">防具: <span id="m-arm">なし</span></div>
+                        <div class="col-span-2 text-sm flex items-center mt-2">
+                            <span class="w-12 text-gray-400">武器:</span>
+                            <select id="m-weap-select" class="bg-gray-800 text-white border border-gray-600 rounded p-1 flex-1 text-sm outline-none cursor-pointer" onchange="changeEquip('weapon', this.value)"></select>
+                        </div>
+                        <div class="col-span-2 text-sm flex items-center mt-1">
+                            <span class="w-12 text-gray-400">防具:</span>
+                            <select id="m-arm-select" class="bg-gray-800 text-white border border-gray-600 rounded p-1 flex-1 text-sm outline-none cursor-pointer" onchange="changeEquip('armor', this.value)"></select>
+                        </div>
                     </div>
 
                     <h3 class="text-xl mt-6 mb-2 text-purple-300">なかま (効果)</h3>
@@ -756,6 +762,8 @@
             baseAtk: 5, baseDef: 2, combo: 0,
             weapon: { name: "ひのきのぼう", stat: 2 }, 
             armor: { name: "ぬののふく", stat: 1 },
+            weapons: [{ name: "ひのきのぼう", stat: 2 }],
+            armors: [{ name: "ぬののふく", stat: 1 }],
             mistakes: [],
             companions: [],
             capturedMonsters: [],
@@ -854,11 +862,13 @@
                                 player.gold += q.reward.val;
                                 startDialog([...q.msgComplete, `${q.reward.val} G を手に入れた！`]);
                             } else if (q.reward.type === 'weapon') {
+                                if (!player.weapons.find(w => w.name === q.reward.name)) player.weapons.push({name: q.reward.name, stat: q.reward.stat});
                                 player.weapon = { name: q.reward.name, stat: q.reward.stat };
-                                startDialog([...q.msgComplete, `${q.reward.name} を装備した！`]);
+                                startDialog([...q.msgComplete, `${q.reward.name} を手に入れた！`]);
                             } else if (q.reward.type === 'armor') {
+                                if (!player.armors.find(a => a.name === q.reward.name)) player.armors.push({name: q.reward.name, stat: q.reward.stat});
                                 player.armor = { name: q.reward.name, stat: q.reward.stat };
-                                startDialog([...q.msgComplete, `${q.reward.name} を装備した！`]);
+                                startDialog([...q.msgComplete, `${q.reward.name} を手に入れた！`]);
                             } else if (q.reward.type === 'item') {
                                 player.items[q.reward.itemId] += q.reward.val || 1;
                                 startDialog([...q.msgComplete, `${ITEM_DB[q.reward.itemId].name} を手に入れた！`]);
@@ -900,8 +910,14 @@
                         ];
                         const r = rewards[Math.floor(Math.random() * rewards.length)];
                         if (r.type === 'item') player.items[r.itemId]++;
-                        else if (r.type === 'weapon') player.weapon = { name: r.name, stat: r.stat };
-                        else if (r.type === 'armor') player.armor = { name: r.name, stat: r.stat };
+                        else if (r.type === 'weapon') {
+                            if (!player.weapons.find(w => w.name === r.name)) player.weapons.push({name: r.name, stat: r.stat});
+                            player.weapon = { name: r.name, stat: r.stat };
+                        }
+                        else if (r.type === 'armor') {
+                            if (!player.armors.find(a => a.name === r.name)) player.armors.push({name: r.name, stat: r.stat});
+                            player.armor = { name: r.name, stat: r.stat };
+                        }
                         else if (r.type === 'gold') player.gold += r.val;
                         updatePlayerUI();
                         startDialog([`【ガチャ(1回${npc.cost}G)】`, `ガラガラ... ポンッ！`, r.msg]);
@@ -1123,8 +1139,12 @@
             document.getElementById('m-def').innerText = player.baseDef + player.armor.stat + compDefBonus;
             document.getElementById('m-exp').innerText = player.exp;
             document.getElementById('m-gold').innerText = player.gold;
-            document.getElementById('m-weap').innerText = player.weapon.name;
-            document.getElementById('m-arm').innerText = player.armor.name;
+            
+            const wSel = document.getElementById('m-weap-select');
+            wSel.innerHTML = player.weapons.map((w, i) => `<option value="${i}" ${w.name === player.weapon.name ? 'selected' : ''}>${w.name}(+${w.stat})</option>`).join('');
+            
+            const aSel = document.getElementById('m-arm-select');
+            aSel.innerHTML = player.armors.map((a, i) => `<option value="${i}" ${a.name === player.armor.name ? 'selected' : ''}>${a.name}(+${a.stat})</option>`).join('');
 
             document.getElementById('m-potion-count').innerText = player.items.potion || 0;
             document.getElementById('m-hpotion-count').innerText = player.items.highPotion || 0;
@@ -1185,6 +1205,17 @@
             document.getElementById('shop-menu').classList.add('hidden-true');
             gameState = 'MAP';
             resetInputState();
+        }
+
+        function changeEquip(type, index) {
+            if (type === 'weapon') {
+                player.weapon = player.weapons[index];
+                const compAtkBonus = (player.companions.includes('戦士') ? 10 : 0) + getMonsterAtkBonus();
+                document.getElementById('m-atk').innerText = player.baseAtk + player.weapon.stat + compAtkBonus;
+            } else {
+                player.armor = player.armors[index];
+                document.getElementById('m-def').innerText = player.baseDef + player.armor.stat + getMonsterDefBonus();
+            }
         }
 
         function setActiveMonster(name) {
@@ -1319,8 +1350,14 @@
         function buyItem(name, type, itemId, stat, price) {
             if(player.gold >= price) {
                 player.gold -= price;
-                if(type === 'weapon') player.weapon = {name, stat};
-                else if(type === 'armor') player.armor = {name, stat};
+                if(type === 'weapon') {
+                    if (!player.weapons.find(w => w.name === name)) player.weapons.push({name, stat});
+                    player.weapon = {name, stat};
+                }
+                else if(type === 'armor') {
+                    if (!player.armors.find(a => a.name === name)) player.armors.push({name, stat});
+                    player.armor = {name, stat};
+                }
                 else if(type === 'item') player.items[itemId]++;
                 
                 document.getElementById('shop-gold').innerText = player.gold;
@@ -1684,14 +1721,20 @@
                 await wait(800);
                 await logMsg(`${currentEnemy.name} が ${drop.name} を おとしていった！`, "text-blue-300");
                 if (drop.type === 'weapon') {
+                    if (!player.weapons.find(w => w.name === drop.name)) player.weapons.push({name: drop.name, stat: drop.stat});
                     if (drop.stat > player.weapon.stat) {
                         player.weapon = { name: drop.name, stat: drop.stat };
                         await logMsg(`${drop.name} を そうびした！`, "text-yellow-300");
+                    } else {
+                        await logMsg(`${drop.name} を ふくろにいれた！(メニューから装備可能)`, "text-gray-300");
                     }
                 } else if (drop.type === 'armor') {
+                    if (!player.armors.find(a => a.name === drop.name)) player.armors.push({name: drop.name, stat: drop.stat});
                     if (drop.stat > player.armor.stat) {
                         player.armor = { name: drop.name, stat: drop.stat };
                         await logMsg(`${drop.name} を そうびした！`, "text-yellow-300");
+                    } else {
+                        await logMsg(`${drop.name} を ふくろにいれた！(メニューから装備可能)`, "text-gray-300");
                     }
                 } else if (drop.type === 'item') {
                     player.items[drop.itemId]++;
@@ -1863,6 +1906,8 @@
                 if (!player.capturedMonsters) player.capturedMonsters = [];
                 if (!player.seenMonsters) player.seenMonsters = {};
                 if (player.activeMonster === undefined) player.activeMonster = null;
+                if (!player.weapons) player.weapons = [player.weapon];
+                if (!player.armors) player.armors = [player.armor];
 
                 MAP_DATA.forEach((map, mIdx) => {
                     map.chests.forEach(c => {
