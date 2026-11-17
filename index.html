@@ -1109,7 +1109,7 @@
         }
 
         function openMenu() {
-            if(gameState !== 'MAP') return;
+            if(gameState !== 'MAP' && gameState !== 'MENU') return;
             gameState = 'MENU';
             resetInputState();
             document.getElementById('main-menu').classList.remove('hidden-true');
@@ -1181,6 +1181,8 @@
 
         function closeMenu() {
             document.getElementById('main-menu').classList.add('hidden-true');
+            document.getElementById('encyclopedia-menu').classList.add('hidden-true');
+            document.getElementById('shop-menu').classList.add('hidden-true');
             gameState = 'MAP';
             resetInputState();
         }
@@ -1262,6 +1264,7 @@
 
         function closeEncyclopedia() {
             document.getElementById('encyclopedia-menu').classList.add('hidden-true');
+            gameState = 'MAP';
             openMenu();
         }
 
