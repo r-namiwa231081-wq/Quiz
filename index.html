@@ -170,6 +170,9 @@
                     <h3 class="text-xl mt-6 mb-2 text-purple-300">なかま (効果)</h3>
                     <div id="m-companions" class="text-md text-gray-300 border-2 border-gray-600 p-2 rounded">なし</div>
                     
+                    <h3 class="text-xl mt-6 mb-2 text-orange-300">おつかい (クエスト)</h3>
+                    <div id="m-quests" class="text-sm text-gray-300 border border-gray-600 p-2 rounded max-h-32 overflow-y-auto">なし</div>
+
                     <h3 class="text-xl mt-6 mb-2 text-blue-300">どうぐ</h3>
                     <div id="m-items" class="text-lg">
                         <div class="flex justify-between items-center mb-2">
@@ -192,7 +195,8 @@
                     </div>
 
                     <h3 class="text-xl mt-6 mb-2 text-green-300">きろく</h3>
-                    <button class="btn-hover border-2 border-white px-4 py-2 w-full text-left bg-black text-yellow-300" onclick="saveGame()">💾 ぼうけんを記録する(セーブ)</button>
+        <button class="btn-hover border-2 border-white px-4 py-2 w-full text-left bg-black text-yellow-300 mb-2" onclick="openEncyclopedia()">📖 モンスター図鑑＆仲間</button>
+        <button class="btn-hover border-2 border-white px-4 py-2 w-full text-left bg-black text-yellow-300" onclick="saveGame()">💾 ぼうけんを記録する(セーブ)</button>
                 </div>
 
                 <!-- Review Notes -->
@@ -213,6 +217,22 @@
             <div id="shop-items" class="flex flex-col gap-4 text-xl"></div>
             <div class="mt-6 text-right text-yellow-400">所持金: <span id="shop-gold">0</span> G</div>
             <button class="mt-8 btn-hover border-2 border-white px-6 py-2 w-full text-xl bg-black" onclick="closeShop()">やめる</button>
+        </div>
+    </div>
+
+    <!-- ENCYCLOPEDIA OVERLAY -->
+    <div id="encyclopedia-menu" class="absolute inset-0 z-[45] bg-black bg-opacity-95 hidden-true flex items-center justify-center p-4">
+        <div class="nes-border w-full max-w-3xl max-h-[90vh] overflow-y-auto flex flex-col p-4 relative bg-black">
+            <div class="sticky top-0 bg-black z-40 pb-2 mb-4 border-b border-white flex justify-between items-center">
+                <h2 class="text-2xl md:text-3xl text-pink-400">モンスター図鑑</h2>
+                <button class="text-2xl btn-hover" onclick="closeEncyclopedia()">✕</button>
+            </div>
+            <div class="mb-4 text-gray-300 text-sm">
+                現在のおとも: <span id="ency-active" class="text-yellow-300 text-lg">なし</span>
+            </div>
+            <div id="ency-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Populated dynamically -->
+            </div>
         </div>
     </div>
 
@@ -488,6 +508,37 @@
             [{ name: "虚無の影", emoji: "👽", hp: 1200, atk: 130, exp: 800, gold: 600, drop: {name: '星屑の剣(攻+99)', type: 'weapon', stat: 99, prob: 0.05} }]
         ];
 
+        const MONSTER_BONUSES = {
+            "スライム": { desc: "戦闘後HP回復(+2)", type: 'heal', val: 2 },
+            "サボテン": { desc: "攻撃力+2", type: 'atk', val: 2 },
+            "デーモン": { desc: "攻撃力+5", type: 'atk', val: 5 },
+            "雪女": { desc: "防御力+5", type: 'def', val: 5 },
+            "フレイム": { desc: "攻撃力+10", type: 'atk', val: 10 },
+            "ハーピー": { desc: "回答時間+20秒", type: 'time', val: 20 },
+            "マンドラゴラ": { desc: "戦闘後HP回復(+10)", type: 'heal', val: 10 },
+            "ゴーレム": { desc: "防御力+15", type: 'def', val: 15 },
+            "ワイバーン": { desc: "攻撃力+20", type: 'atk', val: 20 },
+            "虚無の影": { desc: "攻・防+10", type: 'all', val: 10 }
+        };
+
+        function getMonsterAtkBonus() {
+            if(!player.activeMonster || !MONSTER_BONUSES[player.activeMonster]) return 0;
+            const b = MONSTER_BONUSES[player.activeMonster];
+            return (b.type === 'atk' || b.type === 'all') ? b.val : 0;
+        }
+
+        function getMonsterDefBonus() {
+            if(!player.activeMonster || !MONSTER_BONUSES[player.activeMonster]) return 0;
+            const b = MONSTER_BONUSES[player.activeMonster];
+            return (b.type === 'def' || b.type === 'all') ? b.val : 0;
+        }
+
+        function getMonsterHealBonus() {
+            if(!player.activeMonster || !MONSTER_BONUSES[player.activeMonster]) return 0;
+            const b = MONSTER_BONUSES[player.activeMonster];
+            return (b.type === 'heal') ? b.val : 0;
+        }
+
         const MAP_DATA = [
             { // 0: Grassland
                 bg: '#000',
@@ -504,6 +555,13 @@
                 ],
                 npcs: [
                     { x: 3, y: 3, sprite: '👴', dialog: ["草原の村へようこそ！", "全10ステージの冒険が待っているぞ。"] },
+                    { x: 2, y: 4, sprite: '👦', quest: {
+                        id: 'q1', type: 'kill', target: 'スライム', count: 3, reward: { type: 'gold', val: 100 },
+                        msgStart: ["ぼく、スライムにいじめられたんだ...", "勇者さま、スライムを 3匹 やっつけて！"],
+                        msgProgress: ["スライム、まだ 3匹 倒してないみたい..."],
+                        msgComplete: ["わーい！ありがとう！", "お礼に 100G あげるね！"],
+                        msgAfter: ["勇者さま、かっこいい！"]
+                    }},
                     { x: 12, y: 2, sprite: '🏨', isInn: true, cost: 10 },
                     { x: 13, y: 3, sprite: '💰', isShop: true, items: [
                         {name: 'どうのつるぎ(攻+5)', type: 'weapon', stat: 5, price: 50}, 
@@ -522,6 +580,13 @@
                     { x: 1, y: 7, sprite: '🚪', isPortal: true, nextMap: 0, targetX: 13, targetY: 7 },
                     { x: 7, y: 4, sprite: '🏨', isInn: true, cost: 30 },
                     { x: 5, y: 2, sprite: '🐪', dialog: ["ラクダだよ。", "砂漠は暑いねえ。"] },
+                    { x: 3, y: 6, sprite: '👵', quest: {
+                        id: 'q2', type: 'item', target: 'オアシスの水', count: 1, reward: { type: 'weapon', name: '鉄のヤリ(攻+15)', stat: 15 },
+                        msgStart: ["喉がカラカラじゃ...", "どこかに落ちている『オアシスの水(✨)』を汲んできておくれ..."],
+                        msgProgress: ["『オアシスの水』は まだ見つからんかね..."],
+                        msgComplete: ["おお、これは冷たい水！生き返った気分じゃ！", "お礼に わしの若い頃の武器を 授けよう！"],
+                        msgAfter: ["助かったよ、気をつけて旅を続けるんじゃぞ。"]
+                    }},
                     { x: 9, y: 4, sprite: '💰', isShop: true, items: [
                         {name: 'はがねの剣(攻+12)', type: 'weapon', stat: 12, price: 150}, 
                         {name: 'てつのよろい(防+8)', type: 'armor', stat: 8, price: 150}, 
@@ -530,7 +595,7 @@
                     ] },
                     { x: 14, y: 1, sprite: '🦂', isBoss: true, name: "サソリ王", hp: 200, atk: 25, exp: 120, gold: 300, nextMap: 2, targetX: 2, targetY: 7 }
                 ],
-                chests: []
+                chests: [ {x: 13, y: 2, isQuestItem: true, item: 'オアシスの水', questId: 'q2', opened: false} ]
             },
             { // 2: Dark Realm
                 bg: '#000',
@@ -538,6 +603,13 @@
                 npcs: [
                     { x: 2, y: 7, sprite: '🚪', isPortal: true, nextMap: 1, targetX: 14, targetY: 2 },
                     { x: 5, y: 3, sprite: '💂', dialog: ["魔王軍の幹部は強いぞ...", "しっかりと装備を整えるんだ。"] },
+                    { x: 2, y: 2, sprite: '👻', quest: {
+                        id: 'q3', type: 'kill', target: 'デーモン', count: 3, reward: { type: 'item', itemId: 'bomb', val: 2 },
+                        msgStart: ["デーモンが 3匹 暴れておる...", "どうか 討伐してくれないか！"],
+                        msgProgress: ["デーモンは まだ 3匹 倒されておらんようじゃ..."],
+                        msgComplete: ["おお！見事な腕前！", "お礼に これを持っていってくれ！(魔法のばくだんx2)"],
+                        msgAfter: ["世界に平和を取り戻してくれ..."]
+                    }},
                     { x: 10, y: 6, sprite: '💰', isShop: true, items: [
                         {name: '闇の剣(攻+18)', type: 'weapon', stat: 18, price: 300}, 
                         {name: '闇の鎧(防+15)', type: 'armor', stat: 15, price: 300}, 
@@ -555,6 +627,13 @@
                     { x: 2, y: 7, sprite: '🚪', isPortal: true, nextMap: 2, targetX: 14, targetY: 2 },
                     { x: 7, y: 4, sprite: '🏨', isInn: true, cost: 80 },
                     { x: 4, y: 2, sprite: '⛄', dialog: ["さむいよー...", "ブルブルブル..."] },
+                    { x: 12, y: 2, sprite: '🐧', quest: {
+                        id: 'q4', type: 'item', target: 'きれいな氷', count: 1, reward: { type: 'armor', name: '氷結の盾(防+22)', stat: 22 },
+                        msgStart: ["ペン...『きれいな氷(✨)』が欲しいペン..."],
+                        msgProgress: ["まだ見つからないペン...？"],
+                        msgComplete: ["ペン！これこれ！", "お礼に 氷結の盾をあげるペン！"],
+                        msgAfter: ["氷おいしいペン！"]
+                    }},
                     { x: 12, y: 6, sprite: '💰', isShop: true, items: [
                         {name: '氷の剣(攻+24)', type: 'weapon', stat: 24, price: 500}, 
                         {name: '氷の鎧(防+20)', type: 'armor', stat: 20, price: 500}, 
@@ -678,7 +757,11 @@
             weapon: { name: "ひのきのぼう", stat: 2 }, 
             armor: { name: "ぬののふく", stat: 1 },
             mistakes: [],
-            companions: []
+            companions: [],
+            capturedMonsters: [],
+            activeMonster: null,
+            seenMonsters: {},
+            quests: {}, killCounts: {}, questItems: {}
         };
         const SPAWN_POINT = { x: 7, y: 7 };
 
@@ -754,6 +837,41 @@
             if (npc) {
                 if (npc.isBoss) return triggerBattle(npc);
                 if (npc.isShop) return openShop(npc);
+                if (npc.quest) {
+                    const qid = npc.quest.id;
+                    const q = npc.quest;
+                    if (!player.quests[qid]) {
+                        player.quests[qid] = 'in_progress';
+                        return startDialog(q.msgStart);
+                    } else if (player.quests[qid] === 'in_progress') {
+                        let isCleared = false;
+                        if (q.type === 'kill' && (player.killCounts[q.target] || 0) >= q.count) isCleared = true;
+                        if (q.type === 'item' && (player.questItems[q.target] || 0) >= q.count) isCleared = true;
+                        
+                        if (isCleared) {
+                            player.quests[qid] = 'completed';
+                            if (q.reward.type === 'gold') {
+                                player.gold += q.reward.val;
+                                startDialog([...q.msgComplete, `${q.reward.val} G を手に入れた！`]);
+                            } else if (q.reward.type === 'weapon') {
+                                player.weapon = { name: q.reward.name, stat: q.reward.stat };
+                                startDialog([...q.msgComplete, `${q.reward.name} を装備した！`]);
+                            } else if (q.reward.type === 'armor') {
+                                player.armor = { name: q.reward.name, stat: q.reward.stat };
+                                startDialog([...q.msgComplete, `${q.reward.name} を装備した！`]);
+                            } else if (q.reward.type === 'item') {
+                                player.items[q.reward.itemId] += q.reward.val || 1;
+                                startDialog([...q.msgComplete, `${ITEM_DB[q.reward.itemId].name} を手に入れた！`]);
+                            }
+                            updatePlayerUI();
+                            return;
+                        } else {
+                            return startDialog(q.msgProgress);
+                        }
+                    } else if (player.quests[qid] === 'completed') {
+                        return startDialog(q.msgAfter);
+                    }
+                }
                 if (npc.isInn) {
                     if (player.hp === player.maxHp) return startDialog(["HPは満タンだ。"]);
                     if (player.gold >= npc.cost) {
@@ -798,7 +916,11 @@
             const chest = map.chests.find(c => c.x === tx && c.y === ty);
             if (chest && !chest.opened) {
                 chest.opened = true;
-                if (chest.item === 'gold') {
+                if (chest.isQuestItem) {
+                    if (!player.questItems[chest.item]) player.questItems[chest.item] = 0;
+                    player.questItems[chest.item]++;
+                    startDialog([`足元にキラキラ光るものが落ちている...`, `『${chest.item}』 を見つけた！`]);
+                } else if (chest.item === 'gold') {
                     player.gold += chest.val;
                     startDialog([`宝箱をあけた！`, `${chest.val} G を手に入れた！`]);
                 } else if (chest.item === 'potion') {
@@ -910,8 +1032,31 @@
             ctx.font = `${TILE_SIZE * 0.8}px Arial`;
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             map.npcs.forEach(n => ctx.fillText(n.sprite, n.x*TILE_SIZE+TILE_SIZE/2, n.y*TILE_SIZE+TILE_SIZE/2));
-            map.chests.forEach(c => ctx.fillText(c.opened ? '🧳' : '🎁', c.x*TILE_SIZE+TILE_SIZE/2, c.y*TILE_SIZE+TILE_SIZE/2));
+            map.chests.forEach(c => {
+                if (c.isQuestItem) {
+                    if (!c.opened) ctx.fillText('✨', c.x*TILE_SIZE+TILE_SIZE/2, c.y*TILE_SIZE+TILE_SIZE/2);
+                } else {
+                    ctx.fillText(c.opened ? '🧳' : '🎁', c.x*TILE_SIZE+TILE_SIZE/2, c.y*TILE_SIZE+TILE_SIZE/2);
+                }
+            });
             
+            if (player.activeMonster) {
+                let mEmoji = "";
+                ENEMY_TIERS.forEach(t => t.forEach(e => { if(e.name === player.activeMonster) mEmoji = e.emoji; }));
+                if(mEmoji) {
+                    let trailX = player.pixelX;
+                    let trailY = player.pixelY;
+                    if(player.direction === 'up') trailY += TILE_SIZE*0.9;
+                    if(player.direction === 'down') trailY -= TILE_SIZE*0.9;
+                    if(player.direction === 'left') trailX += TILE_SIZE*0.9;
+                    if(player.direction === 'right') trailX -= TILE_SIZE*0.9;
+                    
+                    ctx.font = `${TILE_SIZE * 0.55}px Arial`;
+                    ctx.fillText(mEmoji, trailX + TILE_SIZE/2, trailY + TILE_SIZE/2);
+                }
+            }
+
+            ctx.font = `${TILE_SIZE * 0.8}px Arial`;
             ctx.fillText(player.skin, player.pixelX + TILE_SIZE/2, player.pixelY + TILE_SIZE/2);
             ctx.restore();
         }
@@ -969,12 +1114,13 @@
             resetInputState();
             document.getElementById('main-menu').classList.remove('hidden-true');
             
-            const compAtkBonus = player.companions.includes('戦士') ? 10 : 0;
+            const compAtkBonus = (player.companions.includes('戦士') ? 10 : 0) + getMonsterAtkBonus();
+            const compDefBonus = getMonsterDefBonus();
             
             document.getElementById('m-lv').innerText = player.level;
             document.getElementById('m-hp').innerText = `${player.hp}/${player.maxHp}`;
             document.getElementById('m-atk').innerText = player.baseAtk + player.weapon.stat + compAtkBonus;
-            document.getElementById('m-def').innerText = player.baseDef + player.armor.stat;
+            document.getElementById('m-def').innerText = player.baseDef + player.armor.stat + compDefBonus;
             document.getElementById('m-exp').innerText = player.exp;
             document.getElementById('m-gold').innerText = player.gold;
             document.getElementById('m-weap').innerText = player.weapon.name;
@@ -986,17 +1132,38 @@
             document.getElementById('m-stun-count').innerText = player.items.stun || 0;
 
             const compDiv = document.getElementById('m-companions');
+            let compHtml = "";
+            if (player.activeMonster) {
+                const bonusText = MONSTER_BONUSES[player.activeMonster] ? MONSTER_BONUSES[player.activeMonster].desc : "";
+                compHtml += `<div class="text-pink-400 mb-1">🐾 おとも: ${player.activeMonster} (${bonusText})</div>`;
+            }
             if (player.companions.length > 0) {
-                let compHtml = player.companions.map(c => {
+                compHtml += player.companions.map(c => {
                     if (c === '戦士') return `<span class="text-red-400">⚔️ 戦士 (攻撃力+10)</span>`;
                     if (c === '僧侶') return `<span class="text-green-400">🌿 僧侶 (戦闘後HP回復)</span>`;
                     if (c === '魔法使い') return `<span class="text-blue-400">🔮 魔法使い (回答時間延長)</span>`;
                     return c;
                 }).join('<br>');
-                compDiv.innerHTML = compHtml;
-            } else {
-                compDiv.innerText = "なし";
             }
+            if (!compHtml) compHtml = "なし";
+            compDiv.innerHTML = compHtml;
+
+            const qDiv = document.getElementById('m-quests');
+            let qHtml = "";
+            let hasQuest = false;
+            for (const [qid, state] of Object.entries(player.quests)) {
+                if (state === 'in_progress') {
+                    hasQuest = true;
+                    let qDetail = null;
+                    MAP_DATA.forEach(m => m.npcs.forEach(n => { if (n.quest && n.quest.id === qid) qDetail = n.quest; }));
+                    if (qDetail) {
+                        let progress = qDetail.type === 'kill' ? (player.killCounts[qDetail.target]||0) : (player.questItems[qDetail.target]||0);
+                        qHtml += `<div>・${qDetail.target} を集める/倒す (${progress}/${qDetail.count})</div>`;
+                    }
+                }
+            }
+            if (!hasQuest) qHtml = "現在受けているおつかいはありません。";
+            qDiv.innerHTML = qHtml;
 
             const rList = document.getElementById('m-review-list');
             rList.innerHTML = "";
@@ -1016,6 +1183,86 @@
             document.getElementById('main-menu').classList.add('hidden-true');
             gameState = 'MAP';
             resetInputState();
+        }
+
+        function setActiveMonster(name) {
+            if(player.activeMonster === name) player.activeMonster = null;
+            else player.activeMonster = name;
+            openEncyclopedia();
+        }
+
+        function openEncyclopedia() {
+            gameState = 'MENU';
+            resetInputState();
+            document.getElementById('main-menu').classList.add('hidden-true');
+            document.getElementById('encyclopedia-menu').classList.remove('hidden-true');
+            document.getElementById('ency-active').innerText = player.activeMonster || "なし";
+            
+            const list = document.getElementById('ency-list');
+            list.innerHTML = "";
+
+            let allMonsters = [];
+            ENEMY_TIERS.forEach(tier => tier.forEach(e => allMonsters.push(e)));
+            MAP_DATA.forEach(m => m.npcs.forEach(n => { if(n.isBoss) allMonsters.push({name: n.name, emoji: n.sprite, hp: n.hp, atk: n.atk, isBoss: true}); }));
+
+            const uniqueMonsters = [];
+            const seenNames = new Set();
+            for(const m of allMonsters) {
+                if(!seenNames.has(m.name)) {
+                    seenNames.add(m.name);
+                    uniqueMonsters.push(m);
+                }
+            }
+
+            uniqueMonsters.forEach(m => {
+                const div = document.createElement('div');
+                div.className = "nes-border p-3 flex flex-col justify-between bg-gray-900";
+                
+                const isSeen = player.seenMonsters && player.seenMonsters[m.name];
+                const isCaptured = player.capturedMonsters && player.capturedMonsters.includes(m.name);
+                const kills = (player.killCounts && player.killCounts[m.name]) || 0;
+
+                if(isSeen) {
+                    let btnHtml = "";
+                    if(isCaptured) {
+                        const isActive = player.activeMonster === m.name;
+                        btnHtml = `<button class="mt-2 text-sm btn-hover border px-2 py-1 ${isActive ? 'bg-pink-600 border-pink-400' : 'bg-black border-gray-400'}" onclick="setActiveMonster('${m.name}')">${isActive ? '★ おとも中 (はずす)' : 'おとも にする'}</button>`;
+                    } else if (!m.isBoss) {
+                        btnHtml = `<div class="mt-2 text-sm text-gray-500">（未捕獲）</div>`;
+                    } else {
+                        btnHtml = `<div class="mt-2 text-sm text-red-500">（ボス）</div>`;
+                    }
+                    const bonusText = MONSTER_BONUSES[m.name] ? MONSTER_BONUSES[m.name].desc : "とくになし";
+
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3 border-b border-gray-600 pb-2 mb-2">
+                            <span class="text-4xl filter drop-shadow-md">${m.emoji}</span>
+                            <div>
+                                <div class="text-lg text-yellow-300 font-bold">${m.name}</div>
+                                <div class="text-xs text-gray-400">討伐数: ${kills}</div>
+                            </div>
+                        </div>
+                        <div class="text-sm space-y-1 text-gray-300">
+                            <div>HP: ${m.hp} / 攻撃: ${m.atk}</div>
+                            <div class="text-pink-300">おとも効果: ${bonusText}</div>
+                        </div>
+                        ${btnHtml}
+                    `;
+                } else {
+                    div.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl opacity-30">❓</span>
+                            <div class="text-lg text-gray-600 font-bold">？？？？？</div>
+                        </div>
+                    `;
+                }
+                list.appendChild(div);
+            });
+        }
+
+        function closeEncyclopedia() {
+            document.getElementById('encyclopedia-menu').classList.add('hidden-true');
+            openMenu();
         }
 
         function useItemMenu(key) {
@@ -1248,7 +1495,11 @@
         }
 
         function startTimer() {
-            timeLeft = player.companions.includes('魔法使い') ? 130 : 100;
+            let timeBonus = 0;
+            if(player.activeMonster && MONSTER_BONUSES[player.activeMonster] && MONSTER_BONUSES[player.activeMonster].type === 'time') {
+                timeBonus = MONSTER_BONUSES[player.activeMonster].val * 10;
+            }
+            timeLeft = (player.companions.includes('魔法使い') ? 130 : 100) + timeBonus;
             const maxTime = timeLeft;
             const container = document.getElementById('timer-bar-container');
             const bar = document.getElementById('timer-bar');
@@ -1333,7 +1584,7 @@
             await logMsg(`ゆうしゃの こうげき！`);
             await wait(400);
 
-            const compAtkBonus = player.companions.includes('戦士') ? 10 : 0;
+            const compAtkBonus = (player.companions.includes('戦士') ? 10 : 0) + getMonsterAtkBonus();
             const atkPwr = player.baseAtk + player.weapon.stat + compAtkBonus;
             
             let comboMult = 1 + (player.combo * 0.1);
@@ -1369,7 +1620,7 @@
             await logMsg(`${currentEnemy.name}の こうげき！`);
             await wait(600);
 
-            const defPwr = player.baseDef + player.armor.stat;
+            const defPwr = player.baseDef + player.armor.stat + getMonsterDefBonus();
             let dmg = Math.floor((currentEnemy.atk - defPwr) * (1 + (Math.random() * 0.4 - 0.2)));
             if (dmg < 1) dmg = 1;
 
@@ -1404,17 +1655,24 @@
                 return;
             }
 
+            player.seenMonsters[currentEnemy.name] = true;
+            if (!player.killCounts[currentEnemy.name]) player.killCounts[currentEnemy.name] = 0;
+            player.killCounts[currentEnemy.name]++;
+
             let xpGained = Math.floor(currentEnemy.exp * (1 + (player.combo * 0.05)));
             await logMsg(`${xpGained} EX と ${currentEnemy.gold} G を かくとく！`);
             player.exp += xpGained;
             player.gold += currentEnemy.gold;
             updatePlayerUI();
             
-            if (player.companions.includes('僧侶') && player.hp < player.maxHp) {
-                const healAmt = Math.floor(player.maxHp * 0.15);
+            let healAmt = 0;
+            if (player.companions.includes('僧侶')) healAmt += Math.floor(player.maxHp * 0.15);
+            healAmt += getMonsterHealBonus();
+            
+            if (healAmt > 0 && player.hp < player.maxHp) {
                 player.hp = Math.min(player.maxHp, player.hp + healAmt);
                 await wait(400);
-                await logMsg(`僧侶の祈りで HPが ${healAmt} かいふくした！`, "text-green-300");
+                await logMsg(`仲間の効果で HPが ${healAmt} かいふくした！`, "text-green-300");
                 updatePlayerUI();
             }
             
@@ -1436,6 +1694,15 @@
                     player.items[drop.itemId]++;
                     await logMsg(`${ITEM_DB[drop.itemId].name} を てにいれた！`, "text-yellow-300");
                 }
+            }
+
+            if (!currentEnemy.isBoss && !player.capturedMonsters.includes(currentEnemy.name) && Math.random() < 0.15) {
+                await wait(800);
+                await logMsg(`${currentEnemy.name} が なかまになりたそうに こちらをみている！`, "text-pink-300");
+                await wait(800);
+                player.capturedMonsters.push(currentEnemy.name);
+                if (!player.activeMonster) player.activeMonster = currentEnemy.name;
+                await logMsg(`${currentEnemy.name} が なかまに くわわった！`, "text-yellow-300 font-bold");
             }
 
             await wait(1000);
@@ -1587,6 +1854,13 @@
                     player.items = { potion: 3, highPotion: 0, bomb: 0, stun: 0 };
                 }
                 
+                if (!player.quests) player.quests = {};
+                if (!player.killCounts) player.killCounts = {};
+                if (!player.questItems) player.questItems = {};
+                if (!player.capturedMonsters) player.capturedMonsters = [];
+                if (!player.seenMonsters) player.seenMonsters = {};
+                if (player.activeMonster === undefined) player.activeMonster = null;
+
                 MAP_DATA.forEach((map, mIdx) => {
                     map.chests.forEach(c => {
                         if (data.openedChests && data.openedChests.includes(`${mIdx}_${c.x}_${c.y}`)) {
