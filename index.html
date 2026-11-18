@@ -508,13 +508,13 @@
             [{ name: "雪女", emoji: "⛄", hp: 150, atk: 35, exp: 55, gold: 45, drop: {name: '氷の杖(攻+25)', type: 'weapon', stat: 25, prob: 0.15} }],
             [{ name: "フレイム", emoji: "🔥", hp: 220, atk: 45, exp: 80, gold: 70, drop: {name: '炎の鎧(防+20)', type: 'armor', stat: 20, prob: 0.15} }],
             [{ name: "ハーピー", emoji: "🦅", hp: 300, atk: 55, exp: 120, gold: 100, drop: {name: '風の弓(攻+35)', type: 'weapon', stat: 35, prob: 0.15} }],
-            [{ name: "マンドラゴラ", emoji: "🌱", hp: 450, atk: 65, exp: 180, gold: 150, drop: {name: '超キズぐすり', type: 'item', itemId: 'highPotion', prob: 0.3} }],
-            [{ name: "ゴーレム", emoji: "🪨", hp: 600, atk: 80, exp: 250, gold: 200, drop: {name: '水晶の盾(防+35)', type: 'armor', stat: 35, prob: 0.15} }],
-            [{ name: "ワイバーン", emoji: "🦖", hp: 800, atk: 100, exp: 400, gold: 350, drop: {name: '竜騎士の槍(攻+60)', type: 'weapon', stat: 60, prob: 0.15} }],
-            [{ name: "虚無の影", emoji: "👽", hp: 1200, atk: 130, exp: 800, gold: 600, drop: {name: '星屑の剣(攻+99)', type: 'weapon', stat: 99, prob: 0.05} }]
+            [{ name: "マンドラゴラ", emoji: "🌱", hp: 450, atk: 75, exp: 180, gold: 150, drop: {name: '超キズぐすり', type: 'item', itemId: 'highPotion', prob: 0.3} }],
+            [{ name: "ゴーレム", emoji: "🪨", hp: 600, atk: 95, exp: 250, gold: 200, drop: {name: '水晶の盾(防+35)', type: 'armor', stat: 35, prob: 0.15} }],
+            [{ name: "ワイバーン", emoji: "🦖", hp: 800, atk: 120, exp: 400, gold: 350, drop: {name: '竜騎士の槍(攻+60)', type: 'weapon', stat: 60, prob: 0.15} }],
+            [{ name: "虚無の影", emoji: "👽", hp: 1200, atk: 160, exp: 800, gold: 600, drop: {name: '星屑の剣(攻+99)', type: 'weapon', stat: 99, prob: 0.05} }]
         ];
 
-        const RARE_MONSTER = { name: "ゴールデンスライム", emoji: "🪙", hp: 80, atk: 25, exp: 5000, gold: 5000, drop: {name: '黄金の剣(攻+77)', type: 'weapon', stat: 77, prob: 0.3} };
+        const RARE_MONSTER = { name: "ゴールデンスライム", emoji: "🪙", hp: 80, atk: 45, exp: 5000, gold: 5000, drop: {name: '黄金の剣(攻+77)', type: 'weapon', stat: 77, prob: 0.3} };
 
         const MONSTER_BONUSES = {
             "スライム": { desc: "戦闘後HP回復(+2)", type: 'heal', val: 2 },
@@ -578,7 +578,7 @@
                         {name: '魔法のばくだん(敵50Dmg)', type: 'item', itemId: 'bomb', price: 100}
                     ] },
                     { x: 4, y: 6, sprite: '🎰', isGacha: true, cost: 30 },
-                    { x: 13, y: 7, sprite: '👹', isBoss: true, name: "オーク", hp: 80, atk: 15, exp: 50, gold: 100, nextMap: 1, targetX: 2, targetY: 7 }
+                    { x: 13, y: 7, sprite: '👹', isBoss: true, name: "オーク", hp: 80, atk: 25, exp: 50, gold: 100, nextMap: 1, targetX: 2, targetY: 7 }
                 ],
                 chests: [ {x: 1, y: 1, item: 'gold', val: 30, opened: false} ]
             },
@@ -602,7 +602,7 @@
                         {name: '超キズぐすり(HP100回復)', type: 'item', itemId: 'highPotion', price: 100},
                         {name: 'しびれ玉(敵1回休み)', type: 'item', itemId: 'stun', price: 150}
                     ] },
-                    { x: 14, y: 1, sprite: '🦂', isBoss: true, name: "サソリ王", hp: 200, atk: 25, exp: 120, gold: 300, nextMap: 2, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '🦂', isBoss: true, name: "サソリ王", hp: 200, atk: 45, exp: 120, gold: 300, nextMap: 2, targetX: 2, targetY: 7 }
                 ],
                 chests: [ {x: 13, y: 2, isQuestItem: true, item: 'オアシスの水', questId: 'q2', opened: false} ]
             },
@@ -625,7 +625,7 @@
                         {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100},
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100}
                     ] },
-                    { x: 14, y: 1, sprite: '👿', isBoss: true, name: "魔王軍幹部", hp: 400, atk: 40, exp: 500, gold: 600, nextMap: 3, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '👿', isBoss: true, name: "魔王軍幹部", hp: 400, atk: 70, exp: 500, gold: 600, nextMap: 3, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -649,7 +649,7 @@
                         {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100},
                         {name: 'しびれ玉', type: 'item', itemId: 'stun', price: 150}
                     ] },
-                    { x: 14, y: 1, sprite: '🗿', isBoss: true, name: "アイスゴーレム", hp: 700, atk: 55, exp: 900, gold: 800, nextMap: 4, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '🗿', isBoss: true, name: "アイスゴーレム", hp: 700, atk: 100, exp: 900, gold: 800, nextMap: 4, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -664,7 +664,7 @@
                         {name: '炎の鎧(防+25)', type: 'armor', stat: 25, price: 800}, 
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100}
                     ] },
-                    { x: 14, y: 1, sprite: '🌋', isBoss: true, name: "マグマドラゴン", hp: 1200, atk: 75, exp: 1500, gold: 1200, nextMap: 5, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '🌋', isBoss: true, name: "マグマドラゴン", hp: 1200, atk: 140, exp: 1500, gold: 1200, nextMap: 5, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -681,7 +681,7 @@
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100},
                         {name: 'しびれ玉', type: 'item', itemId: 'stun', price: 150}
                     ] },
-                    { x: 14, y: 1, sprite: '👼', isBoss: true, name: "天使長", hp: 2000, atk: 90, exp: 3000, gold: 2000, nextMap: 6, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '👼', isBoss: true, name: "天使長", hp: 2000, atk: 190, exp: 3000, gold: 2000, nextMap: 6, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -697,7 +697,7 @@
                         {name: '森の鎧(防+40)', type: 'armor', stat: 40, price: 2500}, 
                         {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100}
                     ] },
-                    { x: 14, y: 1, sprite: '🌲', isBoss: true, name: "トレント", hp: 3500, atk: 110, exp: 5000, gold: 3500, nextMap: 7, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '🌲', isBoss: true, name: "トレント", hp: 3500, atk: 130, exp: 5000, gold: 3500, nextMap: 7, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -712,7 +712,7 @@
                         {name: '水晶の鎧(防+50)', type: 'armor', stat: 50, price: 3500}, 
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100}
                     ] },
-                    { x: 14, y: 1, sprite: '💎', isBoss: true, name: "クリスタルビースト", hp: 5000, atk: 140, exp: 8000, gold: 5000, nextMap: 8, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '💎', isBoss: true, name: "クリスタルビースト", hp: 5000, atk: 170, exp: 8000, gold: 5000, nextMap: 8, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -729,7 +729,7 @@
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100},
                         {name: 'しびれ玉', type: 'item', itemId: 'stun', price: 150}
                     ] },
-                    { x: 14, y: 1, sprite: '🐉', isBoss: true, name: "神竜", hp: 8000, atk: 180, exp: 15000, gold: 10000, nextMap: 9, targetX: 2, targetY: 7 }
+                    { x: 14, y: 1, sprite: '🐉', isBoss: true, name: "神竜", hp: 8000, atk: 220, exp: 15000, gold: 10000, nextMap: 9, targetX: 2, targetY: 7 }
                 ],
                 chests: []
             },
@@ -744,7 +744,7 @@
                         {name: '星屑の鎧(防+99)', type: 'armor', stat: 99, price: 9999}, 
                         {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100}
                     ] },
-                    { x: 14, y: 1, sprite: '🌌', isBoss: true, name: "真・魔王", hp: 15000, atk: 250, exp: 50000, gold: 50000, nextMap: -1 }
+                    { x: 14, y: 1, sprite: '🌌', isBoss: true, name: "真・魔王", hp: 15000, atk: 300, exp: 50000, gold: 50000, nextMap: -1 }
                 ],
                 chests: []
             }
@@ -1670,7 +1670,12 @@
 
             const defPwr = player.baseDef + player.armor.stat + getMonsterDefBonus();
             let dmg = Math.floor((currentEnemy.atk - defPwr) * (1 + (Math.random() * 0.4 - 0.2)));
-            if (dmg < 1) dmg = 1;
+            
+            // どんなに防御力が高くても、敵の攻撃力の「10%」は最低ダメージとして受ける
+            let minDmg = Math.floor(currentEnemy.atk * 0.1);
+            if (minDmg < 1) minDmg = 1;
+            
+            if (dmg < minDmg) dmg = minDmg;
 
             document.getElementById('battle-screen').classList.add('animate-damage');
             setTimeout(() => document.getElementById('battle-screen').classList.remove('animate-damage'), 300);
