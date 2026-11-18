@@ -189,6 +189,10 @@
                             <span>超キズぐすり x<span id="m-hpotion-count">0</span></span>
                             <button class="btn-hover border border-white px-2 py-1 text-sm bg-black" onclick="useItemMenu('highPotion')">使う(100回復)</button>
                         </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-pink-300">メガキズぐすり x<span id="m-mpotion-count">0</span></span>
+                            <button class="btn-hover border border-pink-400 px-2 py-1 text-sm bg-black text-pink-300" onclick="useItemMenu('megaPotion')">使う(300回復)</button>
+                        </div>
                         <div class="flex justify-between items-center mb-2 text-gray-400">
                             <span>魔法のばくだん x<span id="m-bomb-count">0</span></span>
                             <span class="text-sm">※戦闘用</span>
@@ -325,6 +329,7 @@
         const ITEM_DB = {
             potion: { name: "キズぐすり", heal: 30 },
             highPotion: { name: "超キズぐすり", heal: 100 },
+            megaPotion: { name: "メガキズぐすり", heal: 300 },
             bomb: { name: "魔法のばくだん", dmg: 50 },
             stun: { name: "しびれ玉", stun: true }
         };
@@ -710,6 +715,8 @@
                     { x: 10, y: 4, sprite: '💰', isShop: true, items: [
                         {name: '水晶の剣(攻+65)', type: 'weapon', stat: 65, price: 3500}, 
                         {name: '水晶の鎧(防+50)', type: 'armor', stat: 50, price: 3500}, 
+                        {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100},
+                        {name: 'メガキズぐすり', type: 'item', itemId: 'megaPotion', price: 300},
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100}
                     ] },
                     { x: 14, y: 1, sprite: '💎', isBoss: true, name: "クリスタルビースト", hp: 5000, atk: 170, exp: 8000, gold: 5000, nextMap: 8, targetX: 2, targetY: 7 }
@@ -725,7 +732,7 @@
                     { x: 9, y: 4, sprite: '💰', isShop: true, items: [
                         {name: '覇王の剣(攻+80)', type: 'weapon', stat: 80, price: 5000}, 
                         {name: '覇王の鎧(防+60)', type: 'armor', stat: 60, price: 5000}, 
-                        {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100},
+                        {name: 'メガキズぐすり', type: 'item', itemId: 'megaPotion', price: 300},
                         {name: '魔法のばくだん', type: 'item', itemId: 'bomb', price: 100},
                         {name: 'しびれ玉', type: 'item', itemId: 'stun', price: 150}
                     ] },
@@ -742,7 +749,7 @@
                     { x: 10, y: 6, sprite: '💰', isShop: true, items: [
                         {name: '星屑の剣(攻+99)', type: 'weapon', stat: 99, price: 9999}, 
                         {name: '星屑の鎧(防+99)', type: 'armor', stat: 99, price: 9999}, 
-                        {name: '超キズぐすり', type: 'item', itemId: 'highPotion', price: 100}
+                        {name: 'メガキズぐすり', type: 'item', itemId: 'megaPotion', price: 300}
                     ] },
                     { x: 14, y: 1, sprite: '🌌', isBoss: true, name: "真・魔王", hp: 15000, atk: 300, exp: 50000, gold: 50000, nextMap: -1 }
                 ],
@@ -761,7 +768,7 @@
             x: 7, y: 7, pixelX: 7*TILE_SIZE, pixelY: 7*TILE_SIZE,
             isMoving: false, direction: 'up',
             level: 1, hp: 30, maxHp: 30, exp: 0, gold: 50, 
-            items: { potion: 3, highPotion: 0, bomb: 0, stun: 0 }, 
+            items: { potion: 3, highPotion: 0, megaPotion: 0, bomb: 0, stun: 0 }, 
             baseAtk: 5, baseDef: 2, combo: 0,
             weapon: { name: "ひのきのぼう", stat: 2 }, 
             armor: { name: "ぬののふく", stat: 1 },
@@ -1151,6 +1158,7 @@
 
             document.getElementById('m-potion-count').innerText = player.items.potion || 0;
             document.getElementById('m-hpotion-count').innerText = player.items.highPotion || 0;
+            document.getElementById('m-mpotion-count').innerText = player.items.megaPotion || 0;
             document.getElementById('m-bomb-count').innerText = player.items.bomb || 0;
             document.getElementById('m-stun-count').innerText = player.items.stun || 0;
 
@@ -1316,7 +1324,11 @@
                     player.items[key]--;
                     player.hp = Math.min(player.maxHp, player.hp + item.heal);
                     document.getElementById('m-hp').innerText = `${player.hp}/${player.maxHp}`;
-                    document.getElementById(`m-${key === 'potion' ? 'potion' : 'hpotion'}-count`).innerText = player.items[key];
+                    
+                    if (key === 'potion') document.getElementById('m-potion-count').innerText = player.items[key];
+                    else if (key === 'highPotion') document.getElementById('m-hpotion-count').innerText = player.items[key];
+                    else if (key === 'megaPotion') document.getElementById('m-mpotion-count').innerText = player.items[key];
+                    
                     msg.innerText = `${item.name}で回復した！`;
                     msg.classList.add('text-green-400');
                     updatePlayerUI();
@@ -1401,7 +1413,9 @@
                 currentEnemy.stunned = false;
                 document.getElementById('boss-bg').classList.remove('hidden-true');
             } else {
-                if (Math.random() < 0.002) {
+                // 変更前: if (Math.random() < 0.02) {
+                // ここを 0.01 にすると1%、0.005 にすると0.5% になります！
+                if (Math.random() < 0.01) {
                     currentEnemy = JSON.parse(JSON.stringify(RARE_MONSTER));
                 } else {
                     const list = ENEMY_TIERS[currentMapId];
@@ -1908,10 +1922,11 @@
                 player = { ...player, ...data.player };
                 
                 if (data.player.potions !== undefined && !data.player.items) {
-                    player.items = { potion: data.player.potions, highPotion: 0, bomb: 0, stun: 0 };
+                    player.items = { potion: data.player.potions, highPotion: 0, megaPotion: 0, bomb: 0, stun: 0 };
                 } else if (!player.items) {
-                    player.items = { potion: 3, highPotion: 0, bomb: 0, stun: 0 };
+                    player.items = { potion: 3, highPotion: 0, megaPotion: 0, bomb: 0, stun: 0 };
                 }
+                if (player.items.megaPotion === undefined) player.items.megaPotion = 0;
                 
                 if (!player.quests) player.quests = {};
                 if (!player.killCounts) player.killCounts = {};
