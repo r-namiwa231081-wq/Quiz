@@ -1401,7 +1401,7 @@
                 currentEnemy.stunned = false;
                 document.getElementById('boss-bg').classList.remove('hidden-true');
             } else {
-                if (Math.random() < 0.02) {
+                if (Math.random() < 0.002) {
                     currentEnemy = JSON.parse(JSON.stringify(RARE_MONSTER));
                 } else {
                     const list = ENEMY_TIERS[currentMapId];
